@@ -18,6 +18,7 @@ class RealTimeNewsAnalyzer {
 
     init() {
         this.loadAPIKeys();
+        this.loadLlmEnhancedFeatures(); // LLM 특징 로드
         this.startRealTimeUpdates();
     }
 
@@ -27,6 +28,32 @@ class RealTimeNewsAnalyzer {
         this.apiKey = localStorage.getItem('newsapi_key') || 
                      process?.env?.NEWS_API_KEY || 
                      null;
+    }
+
+    // LLM으로 강화된 특징 데이터 로드
+    async loadLlmEnhancedFeatures() {
+        try {
+            const response = await fetch('../data/processed/llm_enhanced_features.csv');
+            const text = await response.text();
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(header => header.trim());
+            
+            this.llmFeatures = lines.slice(1).filter(line => line.trim() !== '').map(line => {
+                const values = line.split(',').map(value => value.trim());
+                let obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = values[index];
+                });
+                // 숫자형 데이터 변환
+                obj.llm_sentiment_score = parseFloat(obj.llm_sentiment_score);
+                obj.uncertainty_score = parseFloat(obj.uncertainty_score);
+                return obj;
+            });
+            console.log(`LLM 강화 특징 ${this.llmFeatures.length}개 로드 완료.`);
+        } catch (error) {
+            console.warn('LLM 강화 특징 로드 실패:', error);
+            this.llmFeatures = [];
+        }
     }
 
     // 실시간 뉴스 수집 시작
