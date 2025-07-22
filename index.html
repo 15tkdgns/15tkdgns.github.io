@@ -150,37 +150,56 @@
                 <canvas id="volume-chart"></canvas>
             </section>
 
-            <!-- Feature Importance -->
-            <section class="widget medium-widget">
-                <h2>특성 중요도</h2>
-                <div class="feature-list">
-                    <div class="feature-item">
-                        <span class="feature-name">뉴스 감정 분석</span>
-                        <div class="importance-bar">
-                            <div class="importance-fill" style="width: 92%"></div>
-                        </div>
-                        <span class="importance-value">92%</span>
+            <!-- XAI Analysis Section -->
+            <section class="widget large-widget">
+                <h2>주식 예측 주요 근거 (XAI 분석)</h2>
+                <div id="xai-analysis-container">
+                    <!-- Feature Importance -->
+                    <div id="feature-importance-chart" class="xai-chart-container">
+                        <h4>특성 중요도</h4>
+                        <p>로딩 중...</p>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-name">기술적 지표</span>
-                        <div class="importance-bar">
-                            <div class="importance-fill" style="width: 87%"></div>
-                        </div>
-                        <span class="importance-value">87%</span>
+
+                    <!-- Partial Dependence Plot -->
+                    <div id="partial-dependence-plot" class="xai-chart-container">
+                        <h4>부분 의존성 그래프</h4>
+                        <p>로딩 중...</p>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-name">거래량 패턴</span>
-                        <div class="importance-bar">
-                            <div class="importance-fill" style="width: 74%"></div>
-                        </div>
-                        <span class="importance-value">74%</span>
+
+                    <!-- SHAP Summary Plot -->
+                    <div id="shap-summary-plot" class="xai-chart-container">
+                        <h4>SHAP 요약 플롯</h4>
+                        <p>로딩 중...</p>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-name">시장 상관관계</span>
-                        <div class="importance-bar">
-                            <div class="importance-fill" style="width: 68%"></div>
-                        </div>
-                        <span class="importance-value">68%</span>
+
+                    <!-- SHAP Dependence Plot -->
+                    <div id="shap-dependence-plot" class="xai-chart-container">
+                        <h4>SHAP 의존성 플롯</h4>
+                        <p>로딩 중...</p>
+                    </div>
+
+                    <!-- SHAP Force Plot -->
+                    <div id="shap-force-plot" class="xai-chart-container">
+                        <h4>SHAP Force 플롯 (개별 예측)</h4>
+                        <p>로딩 중...</p>
+                    </div>
+
+                    <!-- LIME Explanation -->
+                    <div id="lime-explanation" class="xai-chart-container">
+                        <h4>LIME 설명 (개별 예측)</h4>
+                        <p>로딩 중...</p>
+                    </div>
+
+                    <!-- Confusion Matrix -->
+                    <div id="confusion-matrix" class="xai-chart-container">
+                        <h4>혼동 행렬 및 오류 분석</h4>
+                        <p>로딩 중...</p>
+                    </div>
+
+                    <!-- Counterfactual/What-if Visualization -->
+                    <div id="counterfactual-what-if" class="xai-chart-container">
+                        <h4>반사실적/What-if 시각화</h4>
+                        <p>로딩 중...</p>
                     </div>
                 </div>
             </section>
@@ -229,9 +248,8 @@
                         <span class="alert-icon">💾</span>
                         <span class="alert-message">백업 완료</span>
                     </div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+            </section>
                 </div>
 
                 <!-- Models Performance Page -->
@@ -603,9 +621,12 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="router.js"></script>
     <script src="dashboard.js"></script>
     <script src="dashboard-extended.js"></script>
     <script src="news-analyzer.js"></script>
-    <script src="router.js"></script>
+    <script src="sp500-api-manager.js"></script>
+    <script src="api-config-panel.js"></script>
 </body>
 </html>

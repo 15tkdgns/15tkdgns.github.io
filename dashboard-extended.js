@@ -26,6 +26,11 @@ class DashboardExtensions {
             this.updateLlmAnalysisSummary();
         });
 
+        // XAI 설명 데이터 로드 및 표시
+        this.loadXAIData().then(() => {
+            this.updateXAIExplanation();
+        });
+
         // 데이터 탐색기 초기화
         const datasetSelector = document.getElementById('dataset-selector');
         if (datasetSelector) {
@@ -37,8 +42,414 @@ class DashboardExtensions {
         }
     }
 
+    async loadXAIData() {
+        try {
+            const response = await fetch('../data/raw/monitoring_dashboard.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            this.xaiData = data; // XAI 데이터를 캐시
+        } catch (error) {
+            console.error('XAI 데이터 로드 실패:', error);
+            this.xaiData = null;
+        }
+    }
+
+    updateXAIExplanation() {
+        const xaiAnalysisContainer = document.getElementById('xai-analysis-container');
+        if (!xaiAnalysisContainer || !this.xaiData) {
+            console.warn('XAI analysis container or data not available.');
+            return;
+        }
+
+        // Clear previous content
+        // xaiAnalysisContainer.innerHTML = ''; // index.html에서 이미 초기 로딩 텍스트가 있으므로 주석 처리
+
+        // Render each XAI component
+        this.renderFeatureImportance();
+        this.renderSHAPSummaryPlot();
+        this.renderSHAPDependencePlot();
+        this.renderSHAPForcePlot();
+        this.renderLIMEExplanation();
+        this.renderConfusionMatrix();
+        this.renderPartialDependencePlot(); // Placeholder
+        this.renderCounterfactualWhatIf(); // Placeholder
+    }
+
+    renderFeatureImportance() {
+        const container = document.getElementById('feature-importance-chart');
+        if (!container) return;
+
+        const importanceMethods = this.xaiData.explainability.feature_importance_methods;
+        if (!importanceMethods) {
+            container.innerHTML = '<p>특성 중요도 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        const rfBuiltin = importanceMethods.random_forest_builtin;
+        if (rfBuiltin && Array.isArray(rfBuiltin.features) && Array.isArray(rfBuiltin.importance) && rfBuiltin.features.length > 0) {
+            let html = '<h4>특성 중요도 (Random Forest 내장)</h4>';
+            html += '<ul class="feature-importance-list">';
+
+            const sortedFeatures = rfBuiltin.features
+                .map((name, index) => ({ name, importance: rfBuiltin.importance[index] }))
+                .sort((a, b) => b.importance - a.importance);
+
+            sortedFeatures.forEach(feature => {
+                html += `
+                    <li>
+                        <span class="feature-name">${feature.name}</span>
+                        <span class="feature-value">${feature.importance.toFixed(4)}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>Random Forest 내장 특성 중요도 데이터를 찾을 수 없습니다. `src/utils/xai_monitoring.py`를 실행하여 데이터를 생성했는지 확인하세요.</p>';
+        }
+    }
+
+    renderSHAPSummaryPlot() {
+        const container = document.getElementById('shap-summary-plot');
+        if (!container) return;
+
+        const shapExplanations = this.xaiData.explainability.shap_explanations;
+        if (!shapExplanations || !shapExplanations.random_forest_shap) {
+            container.innerHTML = '<p>SHAP 요약 플롯 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        const rfShap = shapExplanations.random_forest_shap;
+        const featureNames = this.xaiData.explainability.feature_importance_methods.random_forest_builtin.features;
+
+        if (rfShap && rfShap.shap_values && featureNames) {
+            // SHAP 값의 절대값 평균을 특성 중요도로 사용
+            const avgShapValues = rfShap.shap_values.map(row => row[1]).reduce((acc, val) => acc.map((sum, i) => sum + Math.abs(val[i])), new Array(featureNames.length).fill(0)).map(sum => sum / rfShap.shap_values.length);
+
+            const sortedFeatures = featureNames
+                .map((name, index) => ({ name, value: avgShapValues[index] }))
+                .sort((a, b) => b.value - a.value);
+
+            const labels = sortedFeatures.map(f => f.name);
+            const data = sortedFeatures.map(f => f.value);
+
+            container.innerHTML = '<canvas id="shapSummaryChart"></canvas>';
+            this.createBarChart('shapSummaryChart', 'SHAP 요약 플롯 (Random Forest)', labels, data, 'rgba(75, 192, 192, 0.6)', 'rgba(75, 192, 192, 1)');
+        } else {
+            container.innerHTML = '<p>SHAP 요약 플롯 데이터를 로드할 수 없습니다.</p>';
+        }
+    }
+
+    renderSHAPDependencePlot() {
+        const container = document.getElementById('shap-dependence-plot');
+        if (!container) return;
+
+        const shapExplanations = this.xaiData.explainability.shap_explanations;
+        const predictionData = this.xaiData.explainability.prediction_data;
+        if (!shapExplanations || !shapExplanations.random_forest_shap || !predictionData) {
+            container.innerHTML = '<p>SHAP 의존성 플롯 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        const rfShap = shapExplanations.random_forest_shap;
+        const featureNames = this.xaiData.explainability.feature_importance_methods.random_forest_builtin.features;
+        const X_test = predictionData.X_test;
+
+        // 예시: 'volatility' 특성에 대한 의존성 플롯
+        const targetFeatureName = 'volatility';
+        const targetFeatureIndex = featureNames.indexOf(targetFeatureName);
+
+        if (targetFeatureIndex === -1) {
+            container.innerHTML = `<p>특성 '${targetFeatureName}'을(를) 찾을 수 없습니다.</p>`;
+            return;
+        }
+
+        const scatterData = X_test.map((row, i) => ({
+            x: row[targetFeatureIndex],
+            y: rfShap.shap_values[i][1][targetFeatureIndex] // 클래스 1에 대한 SHAP 값
+        }));
+
+        container.innerHTML = '<canvas id="shapDependenceChart"></canvas>';
+        this.createScatterChart(
+            'shapDependenceChart',
+            `SHAP 의존성 플롯 (${targetFeatureName})`,
+            [], // Labels are not used for scatter charts in this way
+            scatterData,
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(255, 99, 132, 1)'
+        );
+    }
+
+    renderSHAPForcePlot() {
+        const container = document.getElementById('shap-force-plot');
+        if (!container) return;
+
+        const shapExplanations = this.xaiData.explainability.shap_explanations;
+        const predictionData = this.xaiData.explainability.prediction_data;
+        if (!shapExplanations || !shapExplanations.random_forest_shap || !predictionData) {
+            container.innerHTML = '<p>SHAP Force 플롯 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        const rfShap = shapExplanations.random_forest_shap;
+        const featureNames = this.xaiData.explainability.feature_importance_methods.random_forest_builtin.features;
+        const X_test = predictionData.X_test;
+
+        // 첫 번째 샘플에 대한 Force Plot 요약
+        if (rfShap.shap_values.length > 0) {
+            const sampleIndex = 0; // 첫 번째 샘플
+            const shapValuesForSample = rfShap.shap_values[sampleIndex][1]; // 클래스 1에 대한 SHAP 값
+            const baseValue = rfShap.base_value[1]; // 클래스 1에 대한 base value
+
+            let html = '<h4>SHAP Force 플롯 (첫 번째 샘플)</h4>';
+            html += '<p>모델의 기본 예측값 (Base Value): <strong>' + baseValue.toFixed(4) + '</strong></p>';
+            html += '<p>각 특성이 예측값에 기여한 정도:</p>';
+            html += '<ul class="feature-importance-list">';
+
+            const contributions = featureNames
+                .map((name, index) => ({ name, value: shapValuesForSample[index] }))
+                .filter(f => Math.abs(f.value) > 0.0001) // 0에 가까운 값 필터링
+                .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+            contributions.forEach(c => {
+                const sign = c.value >= 0 ? '긍정적' : '부정적';
+                const color = c.value >= 0 ? 'green' : 'red';
+                html += `
+                    <li>
+                        <span class="feature-name">${c.name}</span>
+                        <span class="feature-value" style="color: ${color};">${sign}: ${c.value.toFixed(4)}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>SHAP Force 플롯 데이터를 로드할 수 없습니다.</p>';
+        }
+    }
+
+    renderLIMEExplanation() {
+        const container = document.getElementById('lime-explanation');
+        if (!container) return;
+
+        const limeExplanations = this.xaiData.explainability.lime_explanations;
+        if (!limeExplanations || limeExplanations.length === 0) {
+            container.innerHTML = '<p>LIME 설명 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        // 첫 번째 LIME 설명만 표시
+        const firstLimeExplanation = limeExplanations[0];
+        if (firstLimeExplanation && firstLimeExplanation.explanation) {
+            let html = '<h4>LIME 설명 (첫 번째 샘플)</h4>';
+            html += '<p>예측 확률: ' + firstLimeExplanation.prediction_proba[1].toFixed(4) + '</p>';
+            html += '<ul class="feature-importance-list">';
+
+            firstLimeExplanation.explanation.forEach(exp => {
+                const feature = exp[0];
+                const value = exp[1];
+                const sign = value >= 0 ? '긍정적' : '부정적';
+                const color = value >= 0 ? 'green' : 'red';
+                html += `
+                    <li>
+                        <span class="feature-name">${feature}</span>
+                        <span class="feature-value" style="color: ${color};">${sign}: ${value.toFixed(4)}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>LIME 설명 데이터를 로드할 수 없습니다.</p>';
+        }
+    }
+
+    renderConfusionMatrix() {
+        const container = document.getElementById('confusion-matrix');
+        if (!container) return;
+
+        const predictionData = this.xaiData.explainability.prediction_data;
+        if (!predictionData || !predictionData.y_test || !predictionData.predictions) {
+            container.innerHTML = '<p>혼동 행렬 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        const y_true = predictionData.y_test;
+        const y_pred = predictionData.predictions.random_forest; // Random Forest 예측 사용
+
+        if (!y_pred) {
+            container.innerHTML = '<p>Random Forest 예측 데이터를 찾을 수 없습니다.</p>';
+            return;
+        }
+
+        // 혼동 행렬 계산
+        const classes = [0, 1]; // 0: Normal, 1: Event
+        const confusionMatrix = Array(classes.length).fill(0).map(() => Array(classes.length).fill(0));
+
+        for (let i = 0; i < y_true.length; i++) {
+            const trueIdx = classes.indexOf(y_true[i]);
+            const predIdx = classes.indexOf(y_pred[i]);
+            if (trueIdx !== -1 && predIdx !== -1) {
+                confusionMatrix[trueIdx][predIdx]++;
+            }
+        }
+
+        // 혼동 행렬 시각화 (테이블)
+        let html = '<h4>혼동 행렬 (Random Forest)</h4>';
+        html += '<table class="confusion-matrix-table">';
+        html += '<thead><tr><th></th><th>예측: 정상 (0)</th><th>예측: 이벤트 (1)</th></tr></thead>';
+        html += '<tbody>';
+        html += `<tr><th>실제: 정상 (0)</th><td>${confusionMatrix[0][0]} (TN)</td><td>${confusionMatrix[0][1]} (FP)</td></tr>`;
+        html += `<tr><th>실제: 이벤트 (1)</th><td>${confusionMatrix[1][0]} (FN)</td><td>${confusionMatrix[1][1]} (TP)</td></tr>`;
+        html += '</tbody></table>';
+
+        // 추가 메트릭
+        const tn = confusionMatrix[0][0];
+        const fp = confusionMatrix[0][1];
+        const fn = confusionMatrix[1][0];
+        const tp = confusionMatrix[1][1];
+
+        const accuracy = (tn + tp) / (tn + fp + fn + tp);
+        const precision = tp / (tp + fp);
+        const recall = tp / (tp + fn);
+        const f1 = 2 * (precision * recall) / (precision + recall);
+
+        html += '<div class="confusion-matrix-metrics">';
+        html += `<p>정확도 (Accuracy): ${accuracy.toFixed(4)}</p>`;
+        html += `<p>정밀도 (Precision): ${precision.toFixed(4)}</p>`;
+        html += `<p>재현율 (Recall): ${recall.toFixed(4)}</p>`;
+        html += `<p>F1-Score: ${f1.toFixed(4)}</p>`;
+        html += '</div>';
+
+        container.innerHTML = html;
+    }
+
+    renderPartialDependencePlot() {
+        const container = document.getElementById('partial-dependence-plot');
+        if (container) {
+            container.innerHTML = '<h4>부분 의존성 그래프</h4><p>부분 의존성 그래프는 특정 특성(들)이 모델 예측에 미치는 평균적인 영향을 보여줍니다. 이 시각화를 생성하려면 추가적인 계산과 데이터 처리가 필요합니다.</p>';
+        }
+    }
+
+    renderCounterfactualWhatIf() {
+        const container = document.getElementById('counterfactual-what-if');
+        if (container) {
+            container.innerHTML = '<h4>반사실적/What-if 시각화</h4><p>반사실적 설명은 예측을 변경하기 위해 입력 특성을 최소한으로 변경하는 방법을 보여줍니다. What-if 분석은 특정 시나리오에서 모델 예측이 어떻게 변하는지 탐색합니다. 이 시각화를 생성하려면 복잡한 계산과 사용자 상호작용이 필요합니다.</p>';
+        }
+    }
+
     // 뉴스 분석 기능
     async loadNewsData() {
+
+    }
+
+    // Chart.js 헬퍼 함수
+    createBarChart(elementId, title, labels, data, backgroundColor, borderColor) {
+        const ctx = document.getElementById(elementId)?.getContext('2d');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: title,
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title
+                    }
+                }
+            }
+        });
+    }
+
+    createScatterChart(elementId, title, labels, data, backgroundColor, borderColor) {
+        const ctx = document.getElementById(elementId)?.getContext('2d');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: title,
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom'
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title
+                    }
+                }
+            }
+        });
+    }
+
+    createHeatmap(elementId, title, labels, data) {
+        const ctx = document.getElementById(elementId)?.getContext('2d');
+        if (!ctx) return;
+
+        // Chart.js에서 직접적인 히트맵 차트 타입은 없으므로, Bar 차트를 변형하거나 다른 라이브러리 사용 고려
+        // 여기서는 간단한 텍스트 기반의 히트맵을 생성하거나, 복잡한 구현을 위해 별도 라이브러리(예: D3.js, Plotly.js)를 사용해야 함
+        // 일단은 텍스트로 표시
+        let html = `<h4>${title}</h4>`;
+        html += '<table class="confusion-matrix-table">';
+        html += '<thead><tr><th></th>';
+        labels.forEach(label => html += `<th>${label} (예측)</th>`);
+        html += '</tr></thead><tbody>';
+
+        labels.forEach((rowLabel, i) => {
+            html += `<tr><th>${rowLabel} (실제)</th>`;
+            labels.forEach((colLabel, j) => {
+                const value = data[i][j];
+                html += `<td class="matrix-cell" data-value="${value}">${value}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById(elementId).innerHTML = html;
+    }
+
+    // 뉴스 피드 업데이트 및 표시
         try {
             const response = await fetch('../data/raw/news_data.csv');
             let newsData;
