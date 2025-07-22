@@ -31,15 +31,222 @@ class DashboardExtensions {
             this.updateXAIExplanation();
         });
 
-        // 데이터 탐색기 초기화
+        // 데이터셋 선택 드롭다운에 이벤트 리스너를 등록합니다.
         const datasetSelector = document.getElementById('dataset-selector');
         if (datasetSelector) {
             datasetSelector.addEventListener('change', (event) => {
+                // 선택된 데이터셋을 로드하고 테이블에 표시합니다.
                 this.loadAndDisplayDataset(event.target.value);
             });
-            // 페이지 로드 시 기본 데이터셋 로드
+            // 페이지 로드 시 기본 선택된 데이터셋을 로드합니다.
             this.loadAndDisplayDataset(datasetSelector.value);
         }
+        this.initXaiPage();
+        this.setupPredictionChart();
+    }
+
+    /**
+     * '실시간 예측' 페이지의 예측 차트를 초기화합니다.
+     */
+    setupPredictionChart() {
+        const ctx = document.getElementById('prediction-chart')?.getContext('2d');
+        if (!ctx) return;
+
+        this.dashboard.charts.prediction = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: '실제 가격',
+                        data: [],
+                        borderColor: '#6c757d',
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                    {
+                        label: '예측 가격',
+                        data: [],
+                        borderColor: '#007bff',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { title: { display: true, text: '시간' } },
+                    y: { title: { display: true, text: '가격 (USD)' } }
+                }
+            }
+        });
+
+        // 초기 차트 렌더링
+        this.updatePredictionChart('AAPL');
+    }
+
+    /**
+     * 특정 주식에 대한 예측 차트를 업데이트합니다.
+     * @param {string} stockSymbol - 업데이트할 주식의 심볼
+     */
+    updatePredictionChart(stockSymbol) {
+        const chart = this.dashboard.charts.prediction;
+        if (!chart) return;
+
+        // 모의 시계열 데이터 생성
+        const labels = Array.from({ length: 30 }, (_, i) => `T-${29 - i}`);
+        const actualPriceData = [];
+        const predictedPriceData = [];
+        let currentPrice = Math.random() * 200 + 100;
+
+        for (let i = 0; i < 30; i++) {
+            actualPriceData.push(currentPrice);
+            if (i >= 25) { // 마지막 5개 포인트에 대한 예측
+                predictedPriceData.push(currentPrice * (1 + (Math.random() - 0.45) * 0.05));
+            } else {
+                predictedPriceData.push(null); // 이전 데이터는 null
+            }
+            currentPrice *= (1 + (Math.random() - 0.5) * 0.03);
+        }
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = actualPriceData;
+        chart.data.datasets[0].label = `${stockSymbol} 실제 가격`;
+        chart.data.datasets[1].data = predictedPriceData;
+        chart.data.datasets[1].label = `${stockSymbol} 예측 가격`;
+        chart.update();
+    }
+
+    /**
+     * XAI 분석 페이지를 초기화하고 전역 분석 차트를 렌더링합니다.
+     */
+    initXaiPage() {
+        this.renderGlobalXaiCharts();
+    }
+
+    /**
+     * 전역적 모델 분석을 위한 차트들(특성 중요도, SHAP 요약 플롯 등)을 렌더링합니다.
+     * 실제 애플리케이션에서는 백엔드에서 계산된 XAI 데이터를 가져와야 합니다.
+     * 여기서는 Chart.js를 사용하여 시각화를 위한 모의 데이터를 생성합니다.
+     */
+    renderGlobalXaiCharts() {
+        // 1. 특성 중요도 차트 (Feature Importance)
+        const fiCtx = document.getElementById('feature-importance-chart').getContext('2d');
+        if (fiCtx) {
+            new Chart(fiCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['5일 거래량 변화', '뉴스 감성 점수', '20일 이동평균선', 'RSI', '나스닥 상관관계', '유가 변동성'],
+                    datasets: [{
+                        label: '특성 중요도',
+                        data: [0.35, 0.28, 0.15, 0.12, 0.08, 0.02],
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { title: { display: true, text: '중요도' } } }
+                }
+            });
+        }
+
+        // 2. SHAP 요약 플롯 (Summary Plot) - Chart.js로 간략하게 표현
+        const shapCtx = document.getElementById('shap-summary-plot').getContext('2d');
+        if (shapCtx) {
+            new Chart(shapCtx, {
+                type: 'bubble',
+                data: {
+                    datasets: [
+                        { label: '높은 특성값 (상승 기여)', data: [{x: 0.2, y: 5, r: 15}, {x: 0.15, y: 4, r: 10}], backgroundColor: 'rgba(231, 76, 60, 0.7)' },
+                        { label: '낮은 특성값 (상승 기여)', data: [{x: 0.1, y: 3, r: 5}], backgroundColor: 'rgba(231, 76, 60, 0.4)' },
+                        { label: '높은 특성값 (하락 기여)', data: [{x: -0.18, y: 2, r: 12}], backgroundColor: 'rgba(52, 152, 219, 0.7)' },
+                        { label: '낮은 특성값 (하락 기여)', data: [{x: -0.12, y: 1, r: 8}], backgroundColor: 'rgba(52, 152, 219, 0.4)' },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        x: { title: { display: true, text: 'SHAP 값 (예측에 대한 영향)' } },
+                        y: { display: false }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 선택된 주식에 대한 개별 예측 분석 내용을 동적으로 생성하고 표시합니다.
+     * @param {string} stockSymbol - 분석할 주식의 심볼 (예: 'AAPL')
+     */
+    renderLocalXaiAnalysis(stockSymbol) {
+        console.log(`XAI 개별 분석 렌더링: ${stockSymbol}`);
+
+        // SHAP Force Plot (HTML로 시뮬레이션)
+        const forcePlotContainer = document.getElementById('shap-force-plot');
+        if (forcePlotContainer) {
+            const baseValue = 350.0;
+            const prediction = 355.2;
+            const positiveFeatures = [{name: '5일 거래량', value: 3.2}, {name: '뉴스 감성', value: 2.8}];
+            const negativeFeatures = [{name: '20일 이평선', value: -0.8}];
+            forcePlotContainer.innerHTML = `
+                <h4>SHAP Force 플롯 (${stockSymbol})</h4>
+                <div class="force-plot">
+                    <div class="force-plot-base">기본값: ${baseValue.toFixed(2)}</div>
+                    <div class="force-plot-bar">
+                        ${negativeFeatures.map(f => `<div class="force-feature negative" style="flex-grow: ${Math.abs(f.value)}">${f.name}<br>(${f.value})</div>`).join('')}
+                        <div class="force-prediction">${prediction.toFixed(2)}</div>
+                        ${positiveFeatures.map(f => `<div class="force-feature positive" style="flex-grow: ${Math.abs(f.value)}">${f.name}<br>(${f.value})</div>`).join('')}
+                    </div>
+                </div>
+                <p class="xai-explanation">
+                    위 차트는 ${stockSymbol}의 예측 가격(${prediction.toFixed(2)})이 어떻게 결정되었는지 보여줍니다.
+                    <strong>파란색</strong>은 예측을 낮추는 요인, <strong>빨간색</strong>은 예측을 높이는 요인입니다.
+                </p>
+            `;
+        }
+
+        // LIME 설명 (HTML로 시뮬레이션)
+        const limeContainer = document.getElementById('lime-explanation');
+        if (limeContainer) {
+            limeContainer.innerHTML = `
+                <h4>LIME 설명 (${stockSymbol})</h4>
+                <ul class="lime-explanation-list">
+                    <li class="positive"><strong>뉴스: "신제품 출시"</strong> 가 예측에 <strong>+3.5%</strong> 기여</li>
+                    <li class="positive"><strong>거래량 10% 증가</strong> 가 예측에 <strong>+1.8%</strong> 기여</li>
+                    <li class="negative"><strong>RSI 75 초과</strong> 가 예측에 <strong>-2.1%</strong> 기여</li>
+                </ul>
+                <p class="xai-explanation">
+                    LIME은 특정 예측에 가장 큰 영향을 미친 상위 3-5개 요인을 보여줍니다.
+                </p>
+            `;
+        }
+
+        // 반사실적/What-if 분석 (HTML로 시뮬레이션)
+        const counterfactualContainer = document.getElementById('counterfactual-what-if');
+        if (counterfactualContainer) {
+            counterfactualContainer.innerHTML = `
+                <h4>반사실적/What-if 분석 (${stockSymbol})</h4>
+                <div class="counterfactual-item">
+                    <p><strong>만약</strong> '뉴스 감성 점수'가 <strong>-0.5</strong> 이었다면,</p>
+                    <p><strong>그러면</strong> 예측은 '상승'이 아닌 <strong>'하락'</strong> 이었을 것입니다.</p>
+                </div>
+                <p class="xai-explanation">
+                    이 분석은 예측 결과를 바꾸기 위해 어떤 조건이 충족되어야 하는지 보여줍니다.
+                </p>
+            `;
+        }
+    }
 
         // S&P 500 페이지네이션 초기화
         this.initializePagination();
@@ -665,7 +872,7 @@ class DashboardExtensions {
             const changeSymbol = parseFloat(item.changePercent) >= 0 ? '+' : '';
             
             html += `
-                <tr>
+                <tr data-symbol="${item.symbol}" style="cursor: pointer;">
                     <td>${startIndex + idx + 1}</td>
                     <td class="symbol-cell">
                         <strong>${item.symbol}</strong>
@@ -689,6 +896,18 @@ class DashboardExtensions {
         });
 
         tableBody.innerHTML = html;
+
+        // 테이블 행 클릭 이벤트 리스너 추가
+        tableBody.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                const symbol = row.dataset.symbol;
+                if (symbol) {
+                    this.updatePredictionChart(symbol);
+                    // 차트가 있는 곳으로 스크롤
+                    document.getElementById('prediction-chart').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
 
         // 페이지 정보 업데이트
         const paginationInfo = document.getElementById('pagination-info');

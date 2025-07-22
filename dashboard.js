@@ -284,13 +284,18 @@ class DashboardManager {
     // 거래량 차트
     setupVolumeChart() {
         const ctx = document.getElementById('volume-chart').getContext('2d');
+        const volumeData = {
+            labels: ['NVDA', 'TSLA', 'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'META'],
+            data: [89.1, 67.8, 45.2, 32.1, 28.7, 25.3, 22.4]
+        };
+
         this.charts.volume = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA'],
+                labels: volumeData.labels,
                 datasets: [{
                     label: '거래량 (백만)',
-                    data: [45.2, 32.1, 28.7, 25.3, 67.8, 22.4, 89.1],
+                    data: volumeData.data,
                     backgroundColor: [
                         'rgba(102, 126, 234, 0.8)',
                         'rgba(118, 75, 162, 0.8)',
@@ -325,6 +330,33 @@ class DashboardManager {
                 }
             }
         });
+
+        // 거래량 데이터를 기반으로 XAI 선택 메뉴를 업데이트합니다.
+        this.updateXaiStockSelector(volumeData);
+    }
+
+    /**
+     * 거래량 데이터를 기반으로 XAI 주식 선택 드롭다운 메뉴를 업데이트합니다.
+     * @param {object} volumeData - 거래량 차트 데이터 ({labels: string[], data: number[]})
+     */
+    updateXaiStockSelector(volumeData) {
+        const xaiStockSelector = document.getElementById('xai-stock-selector');
+        if (!xaiStockSelector) return;
+
+        // 거래량을 기준으로 상위 5개 종목을 선택합니다.
+        const top5Stocks = volumeData.labels
+            .map((label, index) => ({ symbol: label, volume: volumeData.data[index] }))
+            .sort((a, b) => b.volume - a.volume)
+            .slice(0, 5);
+
+        xaiStockSelector.innerHTML = top5Stocks
+            .map(stock => `<option value="${stock.symbol}">${stock.symbol}</option>`)
+            .join('');
+
+        // 드롭다운이 변경되었으므로, 첫 번째 항목에 대한 분석을 다시 렌더링합니다.
+        if (top5Stocks.length > 0) {
+            this.handleXaiStockChange(top5Stocks[0].symbol);
+        }
     }
 
     // 모델 비교 차트
@@ -469,25 +501,109 @@ class DashboardManager {
         const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
+        let touchStartX = 0;
+
+        const openSidebar = () => {
+            sidebar.classList.add('open');
+            mainContent.classList.add('shifted');
+        };
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('open');
+            mainContent.classList.remove('shifted');
+        };
 
         if (mobileMenuToggle && sidebar && mainContent) {
-            mobileMenuToggle.addEventListener('click', () => {
-                // 사이드바의 'open' 클래스를 토글하여 표시/숨김을 제어합니다.
-                sidebar.classList.toggle('open');
-                // 메인 콘텐츠의 'shifted' 클래스를 토글하여 사이드바가 열렸을 때 콘텐츠를 이동시킵니다.
-                mainContent.classList.toggle('shifted');
+            mobileMenuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
             });
 
             // 사이드바 메뉴 항목 클릭 시 사이드바 닫기 (모바일 환경에서만 작동)
             sidebar.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', () => {
-                    // 현재 화면 너비가 768px 이하일 때만 사이드바를 닫습니다.
                     if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('open');
-                        mainContent.classList.remove('shifted');
+                        closeSidebar();
                     }
                 });
             });
+
+            // 메인 콘텐츠 클릭 시 사이드바 닫기
+            mainContent.addEventListener('click', () => {
+                if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                    closeSidebar();
+                }
+            });
+
+            // 사이드바에서 스와이프하여 닫기
+            sidebar.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            });
+
+            sidebar.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                if (touchStartX - touchEndX > 50) { // 왼쪽으로 50px 이상 스와이프
+                    closeSidebar();
+                }
+            });
+        }
+
+        // XAI 페이지 주식 선택 이벤트 리스너
+        const xaiStockSelector = document.getElementById('xai-stock-selector');
+        if (xaiStockSelector) {
+            xaiStockSelector.addEventListener('change', (event) => {
+                this.handleXaiStockChange(event.target.value);
+            });
+            // 초기 로드 시 기본값으로 데이터 로드
+            this.handleXaiStockChange(xaiStockSelector.value);
+        }
+
+        // 동적 콘텐츠에 대한 이벤트 리스너 위임 (로그 및 뉴스)
+        document.querySelector('.page-content').addEventListener('click', (event) => {
+            const logEntry = event.target.closest('.log-entry');
+            const newsItem = event.target.closest('.news-item');
+
+            if (logEntry) {
+                // 시스템 로그 항목 클릭 시 로그 페이지로 이동
+                this.navigateToPage('logs');
+            }
+
+            if (newsItem) {
+                // 뉴스 항목 클릭 시 뉴스 분석 페이지로 이동
+                this.navigateToPage('news');
+            }
+        });
+    }
+
+    /**
+     * 특정 페이지로 이동하고 해당 메뉴를 활성화하는 헬퍼 함수
+     * @param {string} pageId - 이동할 페이지의 ID (예: 'logs', 'news')
+     */
+    navigateToPage(pageId) {
+        // 모든 페이지 숨기기 및 활성 클래스 제거
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+        // 대상 페이지 및 링크 활성화
+        document.getElementById(`page-${pageId}`).classList.add('active');
+        const navLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+        if (navLink) {
+            navLink.classList.add('active');
+            document.getElementById('page-title').textContent = navLink.textContent;
+        }
+    }
+
+    // XAI 주식 변경 처리
+    handleXaiStockChange(stockSymbol) {
+        console.log(`XAI 분석을 위해 선택된 주식: ${stockSymbol}`);
+        if (this.extensions && typeof this.extensions.renderLocalXaiAnalysis === 'function') {
+            this.extensions.renderLocalXaiAnalysis(stockSymbol);
+        } else {
+            console.error('renderLocalXaiAnalysis 함수를 찾을 수 없습니다.');
         }
     }
 

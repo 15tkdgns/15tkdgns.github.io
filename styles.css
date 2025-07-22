@@ -798,7 +798,7 @@ body {
     margin-bottom: 20px;
 }
 
-.widget:has(canvas) {
+.widget:has(> canvas) {
     height: 400px;
 }
 
@@ -1183,6 +1183,25 @@ body {
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e0e6ed;
+}
+
+/* 설정 페이지 전체를 감싸는 컨테이너 스타일 */
+.settings-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 설정 페이지 내부의 위젯은 별도 배경을 갖지 않도록 초기화 */
+.settings-container .widget {
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+    border: none;
+    padding: 0;
 }
 
 .system-info {
@@ -1629,5 +1648,188 @@ img, video {
 
     .xai-chart-container h4 {
         font-size: 1.1em;
+    }
+}
+
+/* 모바일 메뉴 토글 버튼 */
+.mobile-menu-toggle {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001; /* 사이드바보다 위에 표시 */
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--dark-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 모바일 뷰 (768px 이하) */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 280px; /* 모바일에서 사이드바 너비 고정 */
+    }
+
+    .mobile-menu-toggle {
+        display: block; /* 모바일에서만 표시 */
+    }
+
+    .sidebar {
+        transform: translateX(-100%); /* 기본적으로 화면 밖으로 숨김 */
+        position: fixed;
+        z-index: 1000;
+        height: 100vh;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar.open {
+        transform: translateX(0); /* 'open' 클래스가 추가되면 화면 안으로 들어옴 */
+    }
+
+    .main-content {
+        margin-left: 0; /* 기본 마진 제거 */
+        transition: margin-left 0.3s ease;
+    }
+
+    .main-content.shifted {
+        margin-left: var(--sidebar-width); /* 사이드바가 열리면 메인 콘텐츠를 오른쪽으로 밀어냄 */
+    }
+
+    .content-header {
+        left: 0; /* 기본 위치 */
+        width: 100%; /* 기본 너비 */
+        padding: 10px 15px;
+    }
+
+    .content-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .page-content {
+        padding: 20px 15px; /* 모바일 환경에 맞는 패딩 */
+        padding-top: 80px; /* 고정 헤더를 위한 상단 패딩 */
+    }
+
+    .large-widget {
+        grid-column: span 1; /* 모바일에서는 모든 위젯이 1칸 차지 */
+    }
+
+    .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
+        grid-template-columns: 1fr; /* 모든 그리드를 1열로 변경 */
+    }
+
+    .header-actions {
+        gap: 5px;
+    }
+
+    .btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    .system-metrics {
+        grid-template-columns: repeat(2, 1fr); /* 모바일에서는 2열로 표시 */
+    }
+
+    .metric-value {
+        font-size: 1.8rem;
+    }
+
+    .model-comparison-table {
+        overflow-x: auto; /* 작은 화면에서 테이블 내용이 잘리지 않도록 가로 스크롤 추가 */
+    }
+}
+
+/* 추가적인 반응형 스타일 */
+@media (max-width: 480px) {
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .page-content {
+        padding-top: 120px; /* 헤더 높이가 늘어났으므로 패딩 조정 */
+    }
+
+    .system-metrics {
+        grid-template-columns: 1fr; /* 가장 작은 화면에서는 1열로 표시 */
+    }
+}
+
+/* XAI Page Specific Styles */
+.xai-container .widget h3 {
+    margin-bottom: 15px;
+}
+
+.xai-description {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.xai-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+}
+
+.xai-chart-container {
+    height: auto; /* 높이를 자동으로 조절하여 내용이 잘리지 않도록 함 */
+    min-height: 400px; /* 최소 높이를 지정하여 일관된 모양 유지 */
+}
+
+.xai-chart-container p {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.xai-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.xai-controls select {
+    padding: 10px 15px;
+    border: 2px solid #e0e6ed;
+    border-radius: 6px;
+    background: white;
+    font-size: 1rem;
+    max-width: 300px;
+}
+
+#xai-summary-recommendation {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+#xai-summary-recommendation p {
+    margin-bottom: 10px;
+}
+
+#xai-summary-recommendation ul {
+    list-style-position: inside;
+    padding-left: 10px;
+}
+
+#xai-summary-recommendation li {
+    margin-bottom: 8px;
+    color: #444;
+}
+
+@media (max-width: 768px) {
+    .xai-grid {
+        grid-template-columns: 1fr;
     }
 }
