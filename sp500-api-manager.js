@@ -2,6 +2,7 @@
 class SP500APIManager {
     constructor() {
         this.apiKeys = {};
+        this.apiStatus = {}; // API 상태 추적을 위한 객체 추가
         this.dataCache = new Map();
         this.updateInterval = 60000; // 1분마다 업데이트
         this.retryAttempts = 3;
@@ -65,7 +66,7 @@ class SP500APIManager {
                     news: 'reference/news',
                     financials: 'reference/financials'
                 },
-                rateLimit: 5, // 5 calls per minute for free
+                rateLimit: 5, // 5 calls per minute for free tier
                 supported: true
             },
             
@@ -126,6 +127,21 @@ class SP500APIManager {
             iexCloud: localStorage.getItem('iex_key') || process?.env?.IEX_KEY
         };
         
+        // 각 API의 초기 상태 설정
+        for (const apiName in this.apis) {
+            if (this.apis[apiName].supported) {
+                if (apiName === 'yahooFinance') {
+                    this.apiStatus[apiName] = 'active'; // Yahoo Finance는 키 불필요
+                } else if (this.apiKeys[apiName] && this.apiKeys[apiName] !== 'demo') {
+                    this.apiStatus[apiName] = 'active';
+                } else if (this.apiKeys[apiName] === 'demo') {
+                    this.apiStatus[apiName] = 'demo_key';
+                } else {
+                    this.apiStatus[apiName] = 'no_key';
+                }
+            }
+        }
+
         // 데모 키 (제한적 사용)
         if (!this.apiKeys.alphaVantage) {
             this.apiKeys.alphaVantage = 'demo'; // Alpha Vantage demo key
@@ -154,6 +170,7 @@ class SP500APIManager {
     async collectAllData() {
         console.log('S&P 500 데이터 수집 시작...');
         
+        const apiNames = Object.keys(this.apis);
         const tasks = [
             this.collectFromAlphaVantage(),
             this.collectFromFinancialModelingPrep(),
@@ -166,11 +183,13 @@ class SP500APIManager {
         const results = await Promise.allSettled(tasks);
         
         results.forEach((result, index) => {
-            const apiName = Object.keys(this.apis)[index];
+            const apiName = apiNames[index];
             if (result.status === 'fulfilled') {
                 console.log(`✅ ${apiName} 데이터 수집 성공:`, result.value?.length || 0, '개 종목');
+                this.apiStatus[apiName] = 'active';
             } else {
                 console.warn(`❌ ${apiName} 데이터 수집 실패:`, result.reason);
+                this.apiStatus[apiName] = 'error';
             }
         });
         
@@ -580,6 +599,8 @@ class SP500APIManager {
 
     // 유틸리티 메서드들
     async fetchWithRetry(url, retries = this.retryAttempts) {
+        const apiName = Object.keys(this.apis).find(key => url.includes(this.apis[key].baseUrl));
+
         for (let i = 0; i < retries; i++) {
             try {
                 const response = await fetch(url);
@@ -593,10 +614,17 @@ class SP500APIManager {
                 // 데이터 캐싱
                 this.dataCache.set(url, data);
                 
+                if (apiName) {
+                    this.apiStatus[apiName] = 'active'; // 성공 시 상태 업데이트
+                }
+                
                 return data;
                 
             } catch (error) {
                 console.warn(`API 호출 실패 (${i + 1}/${retries}):`, error.message);
+                if (apiName) {
+                    this.apiStatus[apiName] = 'error'; // 실패 시 상태 업데이트
+                }
                 
                 if (i === retries - 1) {
                     throw error;
@@ -627,6 +655,10 @@ class SP500APIManager {
     }
 
     // API 상태 확인
+    getAPIStatus() {
+        return this.apiStatus;
+    }
+
     async testAPIConnections() {
         const results = {};
         
@@ -677,23 +709,3 @@ class SP500APIManager {
         
         return results;
     }
-
-    // 설정 메서드
-    setUpdateInterval(intervalMs) {
-        this.updateInterval = intervalMs;
-        console.log(`업데이트 주기가 ${intervalMs/1000}초로 설정되었습니다.`);
-    }
-
-    // API 사용량 추적
-    getAPIUsage() {
-        return {
-            totalRequests: this.dataCache.size,
-            cacheHits: 0, // 구현 필요
-            lastUpdate: new Date().toISOString(),
-            activeAPIs: Object.keys(this.apiKeys).filter(key => this.apiKeys[key]).length
-        };
-    }
-}
-
-// 전역 S&P 500 API 매니저 인스턴스 생성
-window.sp500APIManager = new SP500APIManager();

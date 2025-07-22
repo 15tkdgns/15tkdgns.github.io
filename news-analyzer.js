@@ -242,13 +242,40 @@ class RealTimeNewsAnalyzer {
         
         for (const article of newsArticles) {
             try {
-                // 감정 분석
-                const sentiment = this.sentimentAnalyzer.analyze(
-                    article.title + ' ' + article.content
+                // LLM 강화 특징 찾기
+                const llmFeature = this.llmFeatures.find(
+                    (feature) => feature.title === article.title && feature.date === new Date(article.publishedAt).toISOString().split('T')[0]
                 );
+
+                let sentimentLabel = 'neutral';
+                let sentimentScore = 0;
+                let eventCategory = this.categorizeNews(article.title + ' ' + article.content); // 기본 분류
+
+                if (llmFeature) {
+                    // LLM 기반 감성 점수 사용
+                    sentimentScore = llmFeature.llm_sentiment_score;
+                    if (sentimentScore > 0.2) sentimentLabel = 'positive';
+                    else if (sentimentScore < -0.2) sentimentLabel = 'negative';
+                    else sentimentLabel = 'neutral';
+
+                    // LLM 기반 시장 감성 및 이벤트 카테고리 사용
+                    if (llmFeature.market_sentiment) {
+                        article.marketSentiment = llmFeature.market_sentiment;
+                    }
+                    if (llmFeature.event_category) {
+                        eventCategory = llmFeature.event_category;
+                    }
+                } else {
+                    // LLM 특징이 없으면 기존 감성 분석 사용
+                    const sentiment = this.sentimentAnalyzer.analyze(
+                        article.title + ' ' + article.content
+                    );
+                    sentimentLabel = sentiment.label;
+                    sentimentScore = sentiment.score;
+                }
                 
                 // 중요도 점수 계산
-                const importance = this.calculateImportance(article);
+                const importance = this.calculateImportance(article, llmFeature); // llmFeature 전달
                 
                 // 주식 관련성 분석
                 const stockRelevance = this.analyzeStockRelevance(article);
@@ -258,12 +285,13 @@ class RealTimeNewsAnalyzer {
                 
                 analyzedNews.push({
                     ...article,
-                    sentiment: sentiment.label,
-                    sentimentScore: sentiment.score,
-                    confidence: sentiment.confidence,
+                    sentiment: sentimentLabel,
+                    sentimentScore: sentimentScore,
+                    confidence: llmFeature ? 1.0 : 0.5, // LLM 특징이 있으면 높은 신뢰도
                     importance,
                     stockRelevance,
                     keywords,
+                    category: eventCategory, // LLM 기반 카테고리 사용
                     analyzedAt: new Date().toISOString()
                 });
                 
@@ -304,11 +332,25 @@ class RealTimeNewsAnalyzer {
     }
 
     // 뉴스 중요도 계산
-    calculateImportance(article) {
+    calculateImportance(article, llmFeature) { // llmFeature 인자 추가
         let score = 0.5; // 기본 점수
         
         const text = (article.title + ' ' + article.content).toLowerCase();
         
+        // LLM 기반 중요도 가중치 추가
+        if (llmFeature) {
+            // 불확실성 점수가 낮을수록 중요도 높임
+            score += (1 - llmFeature.uncertainty_score) * 0.2; 
+            // 시장 감성에 따른 중요도
+            if (llmFeature.market_sentiment === 'Bullish' || llmFeature.market_sentiment === 'Bearish') {
+                score += 0.1; // 강세 또는 약세 뉴스는 더 중요
+            }
+            // 특정 이벤트 카테고리에 따른 중요도
+            if (llmFeature.event_category === 'M&A' || llmFeature.event_category === 'Financials') {
+                score += 0.15;
+            }
+        }
+
         // 중요 키워드 가중치
         const importantKeywords = {
             'fed': 0.3,

@@ -4,6 +4,37 @@ class DashboardExtensions {
         this.dashboard = dashboardManager;
         this.newsCache = [];
         this.sourceFiles = {};
+        this.dataEndpoints = {
+            stock_data: '../data/raw/training_features.csv',
+            news_data: '../data/raw/news_data.csv',
+            features: '../data/processed/llm_enhanced_features.csv',
+            predictions: '../data/raw/realtime_results.json'
+        };
+
+        // 뉴스 업데이트 이벤트 리스너 등록
+        window.addEventListener('newsUpdate', (event) => {
+            this.newsCache = event.detail.news; // news-analyzer에서 전달된 최신 뉴스 캐시 사용
+            this.updateNewsFeedDisplay();
+            this.updateLlmAnalysisSummary();
+        });
+    }
+
+    init() {
+        // 초기 뉴스 데이터 로드 및 표시
+        this.loadNewsData().then(() => {
+            this.updateNewsFeedDisplay();
+            this.updateLlmAnalysisSummary();
+        });
+
+        // 데이터 탐색기 초기화
+        const datasetSelector = document.getElementById('dataset-selector');
+        if (datasetSelector) {
+            datasetSelector.addEventListener('change', (event) => {
+                this.loadAndDisplayDataset(event.target.value);
+            });
+            // 페이지 로드 시 기본 데이터셋 로드
+            this.loadAndDisplayDataset(datasetSelector.value);
+        }
     }
 
     // 뉴스 분석 기능
@@ -44,7 +75,16 @@ class DashboardExtensions {
             }
         }
         
-        return data.slice(0, 20); // 최근 20개만
+        return data; // 모든 데이터 반환
+    }
+
+    parseJSON(jsonText) {
+        try {
+            return JSON.parse(jsonText);
+        } catch (error) {
+            console.error('JSON 파싱 오류:', error);
+            return null;
+        }
     }
 
     generateMockNews() {
@@ -97,6 +137,47 @@ class DashboardExtensions {
         ];
         
         return mockNews;
+    }
+
+    // 뉴스 피드 업데이트 및 표시
+    updateNewsFeedDisplay() {
+        const newsFeedContainer = document.getElementById('news-feed');
+        if (!newsFeedContainer) return;
+
+        newsFeedContainer.innerHTML = ''; // 기존 뉴스 지우기
+
+        if (this.newsCache.length === 0) {
+            newsFeedContainer.innerHTML = '<div class="news-loading">뉴스를 불러오는 중...</div>';
+            return;
+        }
+
+        this.newsCache.forEach(news => {
+            const newsItem = document.createElement('div');
+            newsItem.className = 'news-item';
+            newsItem.setAttribute('data-importance', news.importance || 0.5);
+
+            const sentimentClass = `sentiment-${news.sentiment || 'neutral'}`;
+            const publishedDate = news.publishedAt ? new Date(news.publishedAt).toLocaleString('ko-KR') : '날짜 없음';
+
+            newsItem.innerHTML = `
+                <div class="news-header">
+                    <h4 class="news-title">${news.title}</h4>
+                    ${news.importance ? `<span class="importance-badge ${news.importance >= 0.8 ? 'high' : news.importance >= 0.6 ? 'medium' : ''}">중요도: ${news.importance.toFixed(2)}</span>` : ''}
+                </div>
+                <p class="news-summary">${news.content}</p>
+                <div class="news-meta">
+                    <span class="news-source">출처: ${news.source || '알 수 없음'}</span>
+                    <span class="news-date">${publishedDate}</span>
+                    <span class="sentiment-badge ${sentimentClass}">${news.sentiment || '중립'}</span>
+                </div>
+                ${news.keywords && news.keywords.length > 0 ? `
+                    <div class="news-keywords">
+                        ${news.keywords.map(keyword => `<span class="keyword-tag">${keyword}</span>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+            newsFeedContainer.appendChild(newsItem);
+        });
     }
 
     async generateNewsSummary(newsData) {
@@ -184,6 +265,98 @@ class DashboardExtensions {
         }
     }
 
+    // 데이터셋 로드 및 표시
+    async loadAndDisplayDataset(datasetName) {
+        const dataTable = document.getElementById('data-table');
+        const dataStats = document.getElementById('data-stats');
+        if (!dataTable || !dataStats) return;
+
+        dataTable.innerHTML = '<tr><td>데이터 로딩 중...</td></tr>';
+        dataStats.innerHTML = '';
+
+        const filePath = this.dataEndpoints[datasetName];
+        if (!filePath) {
+            dataTable.innerHTML = '<tr><td>데이터셋을 찾을 수 없습니다.</td></tr>';
+            return;
+        }
+
+        try {
+            const response = await fetch(filePath);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            let data;
+            if (filePath.endsWith('.csv')) {
+                const csvText = await response.text();
+                data = this.parseCSV(csvText);
+            } else if (filePath.endsWith('.json')) {
+                const jsonText = await response.text();
+                data = this.parseJSON(jsonText);
+            } else {
+                throw new Error('지원하지 않는 파일 형식입니다.');
+            }
+
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+                dataTable.innerHTML = '<tr><td>데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            this.renderDataTable(data, dataTable);
+            this.renderDataStats(data, dataStats);
+
+        } catch (error) {
+            console.error(`데이터 로드 실패 (${datasetName}):`, error);
+            dataTable.innerHTML = `<tr><td>데이터 로드 실패: ${error.message}</td></tr>`;
+            dataStats.innerHTML = '';
+        }
+    }
+
+    renderDataTable(data, tableElement) {
+        let headers = [];
+        let rowsHtml = '';
+
+        if (Array.isArray(data)) {
+            if (data.length > 0) {
+                headers = Object.keys(data[0]);
+                rowsHtml = data.map(row => `<tr>${headers.map(header => `<td>${row[header]}</td>`).join('')}</tr>`).join('');
+            }
+        } else if (typeof data === 'object' && data !== null) {
+            // JSON 객체인 경우 (예: realtime_results.json)
+            if (data.predictions && Array.isArray(data.predictions)) {
+                headers = Object.keys(data.predictions[0]);
+                rowsHtml = data.predictions.map(row => `<tr>${headers.map(header => `<td>${row[header]}</td>`).join('')}</tr>`).join('');
+            } else {
+                // 일반 JSON 객체
+                headers = Object.keys(data);
+                rowsHtml = `<tr>${headers.map(header => `<td>${data[header]}</td>`).join('')}</tr>`;
+            }
+        }
+
+        tableElement.innerHTML = `
+            <thead>
+                <tr>
+                    ${headers.map(header => `<th>${header}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        `;
+    }
+
+    renderDataStats(data, statsElement) {
+        let statsHtml = '';
+        if (Array.isArray(data)) {
+            statsHtml += `<div class="stat-item"><span class="stat-label">총 항목 수:</span><span class="stat-value">${data.length}</span></div>`;
+            // 추가적인 통계 (예: 숫자형 데이터의 평균, 최소, 최대 등)를 여기에 추가할 수 있습니다.
+        } else if (typeof data === 'object' && data !== null) {
+            statsHtml += `<div class="stat-item"><span class="stat-label">키 수:</span><span class="stat-value">${Object.keys(data).length}</span></div>`;
+            // JSON 객체에 대한 추가 통계
+        }
+        statsElement.innerHTML = statsHtml;
+    }
+
     // 소스 코드 뷰어 기능
     async loadSourceFile(filePath) {
         try {
@@ -197,7 +370,8 @@ class DashboardExtensions {
             
             if (response.ok) {
                 content = await response.text();
-            } else {
+            }
+            else {
                 content = this.getMockSourceCode(filePath);
             }
             
@@ -221,151 +395,13 @@ class DashboardExtensions {
 
     getMockSourceCode(filePath) {
         const mockCodes = {
-            'dashboard/index.html': `<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>AI 주식 예측 대시보드</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- 대시보드 내용 -->
-    </div>
-</body>
-</html>`,
-            'dashboard/styles.css': `/* 대시보드 스타일 */
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-}
-
-.sidebar {
-    width: 280px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-}`,
-            'src/models/model_training.py': `# AI 모델 훈련 스크립트
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-import joblib
-
-class ModelTrainer:
-    def __init__(self):
-        self.models = {}
-        
-    def load_data(self, file_path):
-        """데이터 로드"""
-        return pd.read_csv(file_path)
-        
-    def preprocess_data(self, data):
-        """데이터 전처리"""
-        # 결측값 처리
-        data = data.fillna(0)
-        
-        # 특성 엔지니어링
-        data['volatility'] = data['high'] - data['low']
-        data['price_change'] = data['close'] - data['open']
-        
-        return data
-        
-    def train_random_forest(self, X, y):
-        """Random Forest 모델 훈련"""
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
-        
-        model = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=15,
-            random_state=42
-        )
-        
-        model.fit(X_train, y_train)
-        
-        # 모델 저장
-        joblib.dump(model, 'models/random_forest_model.pkl')
-        
-        return model, X_test, y_test`,
-            'src/core/data_collection_pipeline.py': `# 데이터 수집 파이프라인
-import yfinance as yf
-import pandas as pd
-from datetime import datetime, timedelta
-import requests
-
-class DataCollectionPipeline:
-    def __init__(self):
-        self.symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']
-        self.data_dir = '../data/raw/'
-        
-    def collect_stock_data(self, symbol, period='1y'):
-        """주식 데이터 수집"""
-        try:
-            stock = yf.Ticker(symbol)
-            data = stock.history(period=period)
-            
-            # 기술적 지표 추가
-            data['SMA_20'] = data['Close'].rolling(window=20).mean()
-            data['SMA_50'] = data['Close'].rolling(window=50).mean()
-            data['RSI'] = self.calculate_rsi(data['Close'])
-            
-            # 파일 저장
-            data.to_csv(f"{self.data_dir}stock_{symbol}.csv")
-            
-            return data
-        except Exception as e:
-            print(f"데이터 수집 실패 {symbol}: {e}")
-            return None
-            
-    def calculate_rsi(self, prices, window=14):
-        """RSI 계산"""
-        delta = prices.diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
-        rs = gain / loss
-        rsi = 100 - (100 / (1 + rs))
-        return rsi
-        
-    def collect_news_data(self, api_key):
-        """뉴스 데이터 수집"""
-        url = "https://newsapi.org/v2/everything"
-        params = {
-            'q': 'stock market finance',
-            'sortBy': 'publishedAt',
-            'pageSize': 100,
-            'apiKey': api_key
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            news_data = response.json()
-            
-            # 데이터 처리 및 저장
-            articles = []
-            for article in news_data.get('articles', []):
-                articles.append({
-                    'title': article['title'],
-                    'description': article['description'],
-                    'source': article['source']['name'],
-                    'publishedAt': article['publishedAt'],
-                    'url': article['url']
-                })
-            
-            df = pd.DataFrame(articles)
-            df.to_csv(f"{self.data_dir}news_data.csv", index=False)
-            
-            return df
-        except Exception as e:
-            print(f"뉴스 데이터 수집 실패: {e}")
-            return None`
+            'dashboard/index.html': `<!DOCTYPE html>\n<html lang="ko">\n<head>\n    <meta charset="UTF-8">\n    <title>AI 주식 예측 대시보드</title>\n    <link rel="stylesheet" href="styles.css">\n</head>\n<body>\n    <div class="dashboard-container">\n        <!-- 대시보드 내용 -->\n    </div>\n</body>\n</html>`,
+            'dashboard/styles.css': `/* 대시보드 스타일 */\n.dashboard-container {\n    display: flex;\n    min-height: 100vh;\n}\n\n.sidebar {\n    width: 280px;\n    background: rgba(255, 255, 255, 0.95);\n    backdrop-filter: blur(20px);\n}`,
+            'src/models/model_training.py': `# AI 모델 훈련 스크립트\nimport pandas as pd\nimport numpy as np\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nimport joblib\n\nclass ModelTrainer:\n    def __init__(self):\n        self.models = {}\n        \n    def load_data(self, file_path):\n        """데이터 로드"""\n        return pd.read_csv(file_path)\n        \n    def preprocess_data(self, data):\n        """데이터 전처리"""\n        # 결측값 처리\n        data = data.fillna(0)\n        \n        # 특성 엔지니어링\n        data['volatility'] = data['high'] - data['low']\n        data['price_change'] = data['close'] - data['open']\n        \n        return data\n        \n    def train_random_forest(self, X, y):\n        """Random Forest 모델 훈련"""\n        X_train, X_test, y_train, y_test = train_test_split(\n            X, y, test_size=0.2, random_state=42\n        )\n        \n        model = RandomForestClassifier(\n            n_estimators=100,\n            max_depth=15,\n            random_state=42\n        )\n        \n        model.fit(X_train, y_train)\n        \n        # 모델 저장\n        joblib.dump(model, 'models/random_forest_model.pkl')\n        \n        return model, X_test, y_test`,
+            'src/core/data_collection_pipeline.py': `# 데이터 수집 파이프라인\nimport yfinance as yf\nimport pandas as pd\nfrom datetime import datetime, timedelta\nimport requests\n\nclass DataCollectionPipeline:\n    def __init__(self):\n        self.symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']\n        self.data_dir = '../data/raw/'\n        \n    def collect_stock_data(self, symbol, period='1y'):\n        """주식 데이터 수집"""\n        try:\n            stock = yf.Ticker(symbol)\n            data = stock.history(period=period)\n            \n            # 기술적 지표 추가\n            data['SMA_20'] = data['Close'].rolling(window=20).mean()\n            data['SMA_50'] = data['Close'].rolling(window=50).mean()\n            data['RSI'] = self.calculate_rsi(data['Close'])\n            \n            # 파일 저장\n            data.to_csv(f"{self.data_dir}stock_{symbol}.csv")\n            \n            return data\n        except Exception as e:\n            print(f"데이터 수집 실패 {symbol}: {e}")\n            return None\n            \n    def calculate_rsi(self, prices, window=14):\n        """RSI 계산"""\n        delta = prices.diff()\n        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()\n        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()\n        rs = gain / loss\n        rsi = 100 - (100 / (1 + rs))\n        return rsi\n        \n    def collect_news_data(self, api_key):\n        """뉴스 데이터 수집"""\n        url = "https://newsapi.org/v2/everything"\n        params = {\n            'q': 'stock market finance',\n            'sortBy': 'publishedAt',\n            'pageSize': 100,\n            'apiKey': api_key\n        }\n        \n        try:\n            response = requests.get(url, params=params)\n            news_data = response.json()\n            \n            # 데이터 처리 및 저장\n            articles = []\n            for article in news_data.get('articles', []):\n                articles.push({\n                    'title': article['title'],\n                    'description': article['description'],\n                    'source': article['source']['name'],\n                    'publishedAt': article['publishedAt'],\n                    'url': article['url']\n                })\n            \n            df = pd.DataFrame(articles)\n            df.to_csv(f"{self.data_dir}news_data.csv", index=False)\n            \n            return df\n        except Exception as e:\n            print(f"뉴스 데이터 수집 실패: {e}")\n            return None`
         };
         
-        return mockCodes[filePath] || `// ${filePath} 파일의 내용입니다.
-// 실제 프로젝트에서는 이 파일의 실제 내용이 표시됩니다.
-
-console.log('Hello from ${filePath}');`;
+        return mockCodes[filePath] || `// ${filePath} 파일의 내용입니다.\n// 실제 프로젝트에서는 이 파일의 실제 내용이 표시됩니다.\n\nconsole.log('Hello from ${filePath}');`;
     }
 
     // 데이터 내보내기 기능
@@ -448,27 +484,10 @@ console.log('Hello from ${filePath}');`;
     showNotification(message, type = 'info', duration = 3000) {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.remove()">×</button>
-        `;
+        notification.innerHTML = `\n            <span class="notification-message">${message}</span>\n            <button class="notification-close" onclick="this.parentElement.remove()">×</button>\n        `;
         
         // 스타일 설정
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideInRight 0.3s ease;
-        `;
+        notification.style.cssText = `\n            position: fixed;\n            top: 20px;\n            right: 20px;\n            padding: 15px 20px;\n            background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};\n            color: white;\n            border-radius: 8px;\n            box-shadow: 0 4px 12px rgba(0,0,0,0.3);\n            z-index: 10000;\n            display: flex;\n            align-items: center;\n            gap: 10px;\n            animation: slideInRight 0.3s ease;\n        `;
         
         document.body.appendChild(notification);
         
@@ -594,6 +613,23 @@ console.log('Hello from ${filePath}');`;
         
         this.showNotification('설정이 초기화되었습니다.', 'success');
     }
+
+    // LLM 분석 요약 업데이트
+    updateLlmAnalysisSummary() {
+        const newsSummary = window.newsAnalyzer.generateNewsSummary();
+        
+        const llmMarketSentimentElem = document.getElementById('llm-market-sentiment');
+        const llmEventCategoryElem = document.getElementById('llm-event-category');
+
+        if (llmMarketSentimentElem) {
+            llmMarketSentimentElem.textContent = newsSummary.marketImpact || '분석 불가';
+        }
+        if (llmEventCategoryElem) {
+            // 주요 이벤트 카테고리를 텍스트로 표시
+            const topCategories = newsSummary.topCategories.map(cat => `${cat.category} (${cat.count})`).join(', ');
+            llmEventCategoryElem.textContent = topCategories || '분석 불가';
+        }
+    }
 }
 
 // 확장 기능을 메인 대시보드에 추가
@@ -611,4 +647,6 @@ DashboardManager.prototype.initExtensions = function() {
     this.exportCurrentData = this.extensions.exportCurrentData.bind(this.extensions);
     this.saveSettings = this.extensions.saveSettings.bind(this.extensions);
     this.resetSettings = this.extensions.resetSettings.bind(this.extensions);
+    this.updateLlmAnalysisSummary = this.extensions.updateLlmAnalysisSummary.bind(this.extensions);
+    this.extensions.init(); // 확장 기능 초기화 호출
 };

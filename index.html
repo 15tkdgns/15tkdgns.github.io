@@ -12,6 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
 </head>
 <body>
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
     <div class="dashboard-container">
         <!-- Navigation Sidebar -->
         <nav class="sidebar">
@@ -62,6 +63,7 @@
                     </div>
                 </div>
                 <div id="last-update" class="last-update">마지막 업데이트: 로딩중...</div>
+                <div id="api-status-container" class="api-status-container"></div>
             </div>
         </nav>
 
@@ -369,6 +371,20 @@
                                     <div class="summary-item">
                                         <h4>영향도 높은 뉴스</h4>
                                         <p>Fed 금리 인상 관련 발언이 시장에 큰 영향을 미치고 있습니다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="widget medium-widget">
+                                <h3>LLM 분석 요약</h3>
+                                <div class="llm-analysis-summary" id="llm-analysis-summary">
+                                    <div class="summary-item">
+                                        <h4>시장 감성 (LLM)</h4>
+                                        <p id="llm-market-sentiment">로딩중...</p>
+                                    </div>
+                                    <div class="summary-item">
+                                        <h4>주요 이벤트 카테고리 (LLM)</h4>
+                                        <p id="llm-event-category">로딩중...</p>
                                     </div>
                                 </div>
                             </div>

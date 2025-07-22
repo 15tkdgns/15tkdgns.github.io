@@ -15,7 +15,7 @@
     --light-color: #ecf0f1;
     --dark-color: #2c3e50;
     --sidebar-width: 280px;
-    --header-height: 70px;
+    --header-height: 60px; /* 헤더 높이 조정: 상단 공백 최소화를 위해 줄임 */
 }
 
 body {
@@ -23,16 +23,17 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     color: #333;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */ /* 왼쪽 잘림 문제 해결을 위해 제거 */
 }
 
-/* 대시보드 컨테이너 */
+/* 대시보드 컨테이너: 사이드바와 메인 콘텐츠를 포함하는 최상위 컨테이너 */
 .dashboard-container {
     display: flex;
     min-height: 100vh;
+    flex-wrap: wrap; /* 화면이 작아지면 요소들이 다음 줄로 넘어가도록 허용 */
 }
 
-/* 사이드바 스타일 */
+/* 사이드바 스타일: 탐색 메뉴를 포함하는 왼쪽 패널 */
 .sidebar {
     width: var(--sidebar-width);
     background: rgba(255, 255, 255, 0.95);
@@ -40,10 +41,10 @@ body {
     border-right: 1px solid rgba(255, 255, 255, 0.2);
     display: flex;
     flex-direction: column;
-    position: fixed;
-    height: 100vh;
-    z-index: 1000;
-    transition: transform 0.3s ease;
+    position: fixed; /* 화면에 고정 */
+    height: 100vh; /* 전체 높이 */
+    z-index: 1000; /* 다른 요소 위에 표시 */
+    transition: transform 0.3s ease; /* 열고 닫을 때 부드러운 전환 효과 */
 }
 
 .sidebar-header {
@@ -172,27 +173,85 @@ body {
     text-align: center;
 }
 
-/* 메인 콘텐츠 */
+/* API 상태 컨테이너 */
+.api-status-container {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.api-status-container h3 {
+    font-size: 1rem;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.api-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.api-status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 6px;
+}
+
+.api-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--dark-color);
+    flex-grow: 1;
+}
+
+.api-status-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-dot.warning {
+    background: var(--warning-color);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
+/* 메인 콘텐츠 영역: 사이드바 옆에 위치하며 실제 페이지 내용을 표시 */
 .main-content {
-    flex: 1;
-    margin-left: var(--sidebar-width);
+    flex: 1; /* 남은 공간을 모두 차지 */
+    margin-left: var(--sidebar-width); /* 데스크톱 뷰에서 사이드바 너비만큼 왼쪽 마진 설정 */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    transition: margin-left 0.3s ease; /* 사이드바 토글 시 부드러운 전환 효과 */
+    padding-top: var(--header-height); /* 고정된 헤더 높이만큼 상단 패딩 추가 */
 }
 
-/* 콘텐츠 헤더 */
+/* 콘텐츠 헤더: 각 페이지의 제목과 액션 버튼을 포함 */
 .content-header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    padding: 20px 30px;
+    padding: 10px 30px; /* 상단 공백 최소화를 위해 패딩 조정 */
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
+    position: fixed; /* 화면 상단에 고정 */
     top: 0;
-    z-index: 100;
+    left: var(--sidebar-width); /* 데스크톱 뷰에서 사이드바 옆에 위치 */
+    width: calc(100% - var(--sidebar-width)); /* 데스크톱 뷰에서 사이드바를 제외한 나머지 너비 차지 */
+    z-index: 100; /* 다른 요소 위에 표시 */
+    transition: width 0.3s ease, left 0.3s ease; /* 사이드바 토글 시 부드러운 전환 효과 */
+}
+
+/* 사이드바가 열렸을 때 (모바일 뷰에서) 헤더 위치 조정 */
+.main-content.shifted .content-header {
+    width: calc(100% - 280px); /* 사이드바 너비만큼 줄어듦 */
+    left: 280px; /* 사이드바 너비만큼 오른쪽으로 이동 */
 }
 
 .content-header h1 {
@@ -204,6 +263,7 @@ body {
 .header-actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap; /* 버튼이 많아지면 다음 줄로 넘어가도록 허용 */
 }
 
 .btn {
@@ -237,20 +297,22 @@ body {
     background: var(--secondary-color);
 }
 
-/* 페이지 콘텐츠 */
+/* 각 페이지의 실제 콘텐츠 영역 */
 .page-content {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
+    flex: 1; /* 남은 공간을 모두 차지 */
+    padding: 20px; /* 페이지 내부 콘텐츠에 적절한 여백 제공 */
+    overflow-y: auto; /* 내용이 넘치면 스크롤바 생성 */
+    box-sizing: border-box; /* 패딩이 너비/높이에 포함되도록 설정 */
 }
 
 .page {
-    display: none;
-    animation: fadeIn 0.5s ease-in-out;
+    display: none; /* 기본적으로 숨김 */
+    width: 100%; /* 전체 너비 차지 */
+    animation: fadeIn 0.5s ease-in-out; /* 페이지 전환 시 페이드인 효과 */
 }
 
 .page.active {
-    display: block;
+    display: block; /* 활성화된 페이지는 표시 */
 }
 
 @keyframes fadeIn {
@@ -293,26 +355,26 @@ body {
     border-radius: 2px;
 }
 
-/* 대시보드 그리드 */
+/* 대시보드 그리드: 위젯들을 배치하는 그리드 레이아웃 */
 .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 최소 300px, 최대 1fr로 자동 조정 */
     gap: 25px;
     align-items: start;
 }
 
 .large-widget {
-    grid-column: span 2;
+    grid-column: span 2; /* 큰 위젯은 2칸 차지 */
 }
 
 .medium-widget {
-    grid-column: span 1;
+    grid-column: span 1; /* 중간 위젯은 1칸 차지 */
 }
 
-/* 시스템 메트릭 */
+/* 시스템 메트릭 카드 */
 .system-metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* 최소 120px, 최대 1fr로 자동 조정 */
     gap: 20px;
 }
 
@@ -349,7 +411,7 @@ body {
     color: #888;
 }
 
-/* 테이블 스타일 */
+/* 테이블 공통 스타일 */
 .performance-table, .predictions-table, .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -374,11 +436,17 @@ body {
     background: rgba(102, 126, 234, 0.05);
 }
 
+/* 모델 비교 테이블 컨테이너: 가로 스크롤 가능하도록 설정 */
+.model-comparison-table {
+    overflow-x: auto; /* 내용이 넘치면 가로 스크롤바 생성 */
+}
+
 /* 예측 결과 스타일 */
 .predictions-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    flex-wrap: wrap; /* 화면이 작아지면 요소들이 다음 줄로 넘어가도록 허용 */
 }
 
 .prediction-item {
@@ -417,8 +485,8 @@ body {
 
 /* 뉴스 피드 스타일 */
 .news-feed {
-    max-height: 500px;
-    overflow-y: auto;
+    max-height: 500px; /* 최대 높이 설정 */
+    overflow-y: auto; /* 내용이 넘치면 세로 스크롤바 생성 */
 }
 
 .news-item {
@@ -539,8 +607,8 @@ body {
 
 /* 로그 뷰어 스타일 */
 .log-viewer {
-    max-height: 500px;
-    overflow-y: auto;
+    max-height: 500px; /* 최대 높이 설정 */
+    overflow-y: auto; /* 내용이 넘치면 세로 스크롤바 생성 */
     background: #1e1e1e;
     color: #d4d4d4;
     padding: 15px;
@@ -665,53 +733,123 @@ body {
     color: var(--primary-color);
 }
 
-/* 반응형 디자인 */
+/* 반응형 디자인: 화면 크기에 따른 레이아웃 조정 */
 @media (max-width: 1200px) {
+    /* 1200px 이하에서는 large-widget이 1칸만 차지하도록 조정 */
     .large-widget {
         grid-column: span 1;
     }
 }
 
 @media (max-width: 768px) {
+    /* 768px 이하 (모바일 뷰)에서 레이아웃 조정 */
     :root {
-        --sidebar-width: 0px;
+        --sidebar-width: 280px; /* 모바일에서 사이드바의 고정 너비 */
+        --header-height: 60px; /* 모바일 헤더 높이 */
     }
     
+    /* 모바일 메뉴 토글 버튼: 작은 화면에서만 표시 */
+    .mobile-menu-toggle {
+        display: block; /* 모바일에서 토글 버튼 표시 */
+        position: fixed;
+        top: 15px; /* 상단 여백 조정 */
+        left: 15px; /* 왼쪽 여백 조정 */
+        z-index: 1001;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 사이드바: 모바일에서 기본적으로 숨김 */
     .sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-100%); /* 화면 밖으로 이동하여 숨김 */
+        position: fixed; /* 고정 위치 유지 */
+        height: 100vh; /* 전체 높이 */
+        width: var(--sidebar-width); /* 고정 너비 */
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000; /* 메인 콘텐츠 위에 표시 */
     }
-    
+
+    /* 사이드바가 열렸을 때 */
     .sidebar.open {
-        transform: translateX(0);
+        transform: translateX(0); /* 화면 안으로 이동하여 표시 */
     }
-    
+
+    /* 메인 콘텐츠: 모바일에서 사이드바 숨김 시 마진 없음 */
     .main-content {
-        margin-left: 0;
+        margin-left: 0; /* 사이드바가 숨겨져 있을 때 왼쪽 마진 없음 */
+        transition: margin-left 0.3s ease; /* 부드러운 전환 효과 */
     }
-    
+
+    /* 사이드바가 열렸을 때 메인 콘텐츠 이동 */
+    .main-content.shifted {
+        margin-left: var(--sidebar-width); /* 사이드바 너비만큼 오른쪽으로 이동 */
+    }
+
+    /* 콘텐츠 헤더: 모바일에서 사이드바 숨김 시 전체 너비 */
+    .content-header {
+        left: 0; /* 사이드바 숨김 시 왼쪽 끝에 위치 */
+        width: 100%; /* 사이드바 숨김 시 전체 너비 */
+        padding-left: 60px; /* 토글 버튼 공간 확보를 위해 왼쪽 패딩 조정 */
+        padding-top: 10px; /* 모바일 헤더 패딩 조정 */
+        padding-bottom: 10px; /* 모바일 헤더 패딩 조정 */
+    }
+
+    /* 사이드바가 열렸을 때 헤더 이동 및 너비 조정 */
+    .main-content.shifted .content-header {
+        left: var(--sidebar-width); /* 사이드바 너비만큼 오른쪽으로 이동 */
+        width: calc(100% - var(--sidebar-width)); /* 사이드바 너비만큼 줄어듦 */
+    }
+
+    /* 페이지 콘텐츠: 모바일에서 패딩 조정 */
     .page-content {
-        padding: 20px 15px;
+        padding: 20px 15px; /* 모바일 화면에 적합한 패딩 */
+        height: auto; /* 높이 자동 조정 */
     }
     
+    /* 그리드 레이아웃: 모바일에서는 1열로 표시 */
     .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
         grid-template-columns: 1fr;
     }
     
-    .content-header {
-        padding: 15px 20px;
-    }
-    
-    .content-header h1 {
-        font-size: 1.4rem;
-    }
-    
+    /* 헤더 액션 버튼 간격 조정 */
     .header-actions {
         gap: 8px;
     }
     
+    /* 버튼 패딩 및 폰트 크기 조정 */
     .btn {
         padding: 6px 12px;
         font-size: 0.8rem;
+    }
+
+    /* 위젯 하단 마진 조정 */
+    .widget {
+        margin-bottom: 15px;
+    }
+
+    /* 시스템 메트릭 그리드 조정 */
+    .system-metrics {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+
+    /* 뉴스 피드, 코드 컨테이너, 로그 뷰어 최대 높이 조정 */
+    .news-feed {
+        max-height: 300px;
+    }
+
+    .code-container {
+        max-height: 400px;
+    }
+
+    .log-viewer {
+        max-height: 300px;
     }
 }
 
@@ -1047,36 +1185,10 @@ canvas {
     border-color: var(--primary-color);
 }
 
-/* 모바일 메뉴 토글 */
-.mobile-menu-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1001;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
-
-@media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: block;
-    }
-    
-    .content-header {
-        padding-left: 60px;
-    }
-}
-
-/* 차트 컨테이너 개선 */
-.widget canvas {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* Ensure images and videos are responsive */
+img, video {
+    max-width: 100%;
+    height: auto;
 }
 
 /* 로그 엔트리 개선 */
@@ -1264,6 +1376,10 @@ canvas {
     border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* 뉴스 에러 상태 */
