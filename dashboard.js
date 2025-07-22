@@ -493,8 +493,8 @@ class DashboardManager {
 
     // 위젯 상세 정보 표시
     showWidgetDetails(widget) {
-        const title = widget.querySelector('h2').textContent;
-        alert(`${title}의 상세 정보를 표시합니다.\n(실제 구현시 모달이나 상세 페이지로 연결)`);
+        // 클릭 메시지 제거 - 아무 동작하지 않음
+        return;
     }
 
     // 모든 데이터 새로고침
