@@ -680,8 +680,20 @@
                 <!-- XAI Analysis Page -->
                 <div id="page-xai" class="page">
                     <div class="xai-container">
+                        <div class="xai-header">
+                            <h2>XAI (Explainable AI) Analysis</h2>
+                            <div class="xai-controls">
+                                <select id="xai-model-selector">
+                                    <option value="random_forest">Random Forest</option>
+                                    <option value="gradient_boosting">Gradient Boosting</option>
+                                    <option value="neural_network">Neural Network</option>
+                                </select>
+                                <button class="btn" id="refresh-xai-btn">Refresh Analysis</button>
+                            </div>
+                        </div>
+                        
                         <div class="widget">
-                            <h2>XAI (Explainable AI) Analysis Overview</h2>
+                            <h3>Overview</h3>
                             <p class="xai-description">
                                 XAI is a technology that explains the prediction results of AI models in a human-understandable way. It helps to understand the internal workings of AI models, which are often like "black boxes," and transparently shows the basis for predictions. This increases model trustworthiness, helps discover potential biases, and supports better decision-making.
                             </p>
@@ -744,6 +756,98 @@
                                     <h4>Counterfactual/What-if Analysis</h4>
                                     <p>Shows what features need to be minimally changed to alter the prediction result. (e.g., "If the 5-day moving average was 2% higher, the prediction would have been 'up' instead of 'down'.")</p>
                                     <!-- Content will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ML Model Performance Analysis -->
+                        <div class="widget">
+                            <h3>ML Model Performance Analysis</h3>
+                            <div class="xai-grid">
+                                <div id="model-performance-metrics" class="xai-chart-container">
+                                    <h4>Performance Metrics Dashboard</h4>
+                                    <canvas id="performance-metrics-chart"></canvas>
+                                </div>
+                                <div id="learning-curves" class="xai-chart-container">
+                                    <h4>Learning Curves</h4>
+                                    <canvas id="learning-curves-chart"></canvas>
+                                </div>
+                                <div id="validation-curves" class="xai-chart-container">
+                                    <h4>Validation Curves</h4>
+                                    <canvas id="validation-curves-chart"></canvas>
+                                </div>
+                                <div id="feature-correlation-heatmap" class="xai-chart-container">
+                                    <h4>Feature Correlation Heatmap</h4>
+                                    <div id="correlation-heatmap-chart"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LLM Analysis Visualizations -->
+                        <div class="widget">
+                            <h3>LLM Analysis & NLP Insights</h3>
+                            <div class="xai-grid">
+                                <div id="sentiment-analysis-chart" class="xai-chart-container">
+                                    <h4>Sentiment Analysis Timeline</h4>
+                                    <canvas id="sentiment-timeline-chart"></canvas>
+                                </div>
+                                <div id="topic-modeling-chart" class="xai-chart-container">
+                                    <h4>Topic Modeling Results</h4>
+                                    <canvas id="topic-modeling-visualization"></canvas>
+                                </div>
+                                <div id="attention-weights-chart" class="xai-chart-container">
+                                    <h4>Attention Weights Visualization</h4>
+                                    <canvas id="attention-weights-chart"></canvas>
+                                </div>
+                                <div id="embedding-space-chart" class="xai-chart-container">
+                                    <h4>Embedding Space (t-SNE)</h4>
+                                    <canvas id="embedding-tsne-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Model Interpretability -->
+                        <div class="widget">
+                            <h3>Advanced Model Interpretability</h3>
+                            <div class="xai-grid">
+                                <div id="decision-tree-viz" class="xai-chart-container">
+                                    <h4>Decision Tree Visualization</h4>
+                                    <div id="decision-tree-container"></div>
+                                </div>
+                                <div id="gradient-analysis" class="xai-chart-container">
+                                    <h4>Gradient-based Attribution</h4>
+                                    <canvas id="gradient-attribution-chart"></canvas>
+                                </div>
+                                <div id="layer-wise-relevance" class="xai-chart-container">
+                                    <h4>Layer-wise Relevance Propagation</h4>
+                                    <canvas id="lrp-chart"></canvas>
+                                </div>
+                                <div id="integrated-gradients" class="xai-chart-container">
+                                    <h4>Integrated Gradients</h4>
+                                    <canvas id="integrated-gradients-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Model Monitoring -->
+                        <div class="widget">
+                            <h3>Real-time Model Monitoring</h3>
+                            <div class="xai-grid">
+                                <div id="prediction-confidence-dist" class="xai-chart-container">
+                                    <h4>Prediction Confidence Distribution</h4>
+                                    <canvas id="confidence-distribution-chart"></canvas>
+                                </div>
+                                <div id="model-drift-detection" class="xai-chart-container">
+                                    <h4>Data Drift Detection</h4>
+                                    <canvas id="drift-detection-chart"></canvas>
+                                </div>
+                                <div id="prediction-vs-actual" class="xai-chart-container">
+                                    <h4>Prediction vs Actual</h4>
+                                    <canvas id="prediction-actual-chart"></canvas>
+                                </div>
+                                <div id="ensemble-voting" class="xai-chart-container">
+                                    <h4>Ensemble Model Voting</h4>
+                                    <canvas id="ensemble-voting-chart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -893,7 +997,13 @@
                 <!-- Settings Page -->
                 <div id="page-settings" class="page">
                     <div class="settings-container">
-                        <h2>System Settings</h2>
+                        <div class="settings-header">
+                            <h2>System Settings</h2>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="dashboard.saveSettings()">Save Settings</button>
+                                <button class="btn" onclick="dashboard.resetSettings()">Reset</button>
+                            </div>
+                        </div>
                         
                         <div class="settings-grid">
                             <div class="widget large-widget">
@@ -960,11 +1070,6 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="settings-actions">
-                            <button class="btn btn-primary" onclick="dashboard.saveSettings()">Save Settings</button>
-                            <button class="btn" onclick="dashboard.resetSettings()">Reset</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -977,7 +1082,7 @@
     <script src="sp500-api-manager.js"></script>
     <script src="api-config-panel.js"></script>
     <script src="news-analyzer.js"></script>
-    <script src="dashboard.js"></script>
     <script src="dashboard-extended.js"></script>
+    <script src="dashboard.js"></script>
 </body>
 </html>

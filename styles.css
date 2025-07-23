@@ -1704,6 +1704,11 @@ canvas {
     border-radius: 2px;
 }
 
+/* Real-time System Status 위젯의 h2 밑줄 제거 */
+#realtime-system-status-widget h2::after {
+    display: none;
+}
+
 /* 대시보드 그리드: 위젯들을 배치하는 그리드 레이아웃 */
 .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
     display: grid;
@@ -2037,18 +2042,23 @@ canvas {
     border-radius: 0 0 8px 8px;
     overflow: auto;
     max-height: 600px;
+    color: #f7fafc;
 }
 
 .code-container pre {
     margin: 0;
     padding: 20px;
     overflow: auto;
+    color: #f7fafc;
 }
 
 .code-container code {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
+    color: #f7fafc;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* 로그 뷰어 스타일 */
@@ -2262,7 +2272,7 @@ canvas {
 }
 
 /* 페이지 헤더 스타일 */
-.predictions-header, .news-header, .data-header, .logs-header {
+.predictions-header, .news-header, .data-header, .logs-header, .code-header, .settings-header, .xai-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2273,13 +2283,20 @@ canvas {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.predictions-controls, .news-controls, .data-controls, .logs-controls {
+.predictions-header h2, .news-header h2, .data-header h2, .logs-header h2, .code-header h2, .settings-header h2, .xai-header h2 {
+    margin: 0;
+    color: var(--dark-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.predictions-controls, .news-controls, .data-controls, .logs-controls, .code-controls, .settings-actions, .xai-controls {
     display: flex;
     gap: 10px;
     align-items: center;
 }
 
-.predictions-controls select, .news-controls select, .data-controls select, .logs-controls select {
+.predictions-controls select, .news-controls select, .data-controls select, .logs-controls select, .code-controls select, .settings-actions select, .xai-controls select {
     padding: 8px 12px;
     border: 2px solid #e0e6ed;
     border-radius: 6px;
@@ -2886,5 +2903,494 @@ img, video {
 @media (max-width: 768px) {
     .xai-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Notification Styles */
+.notification {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification-success {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.notification-error {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.notification-warning {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.notification-info {
+    border-left-color: #17a2b8;
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+}
+
+.notification-message {
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 12px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.notification-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* XAI Loading animation */
+.xai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+.xai-loading p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* === Enhanced ML & LLM Visualization Styles === */
+
+/* Decision Tree Visualization Styles */
+.decision-tree {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.tree-node, .tree-leaf {
+    background: #3498db;
+    color: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 8px;
+    display: inline-block;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+    min-width: 140px;
+}
+
+.tree-node:hover, .tree-leaf:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.tree-leaf {
+    font-weight: bold;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.node-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.node-value {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.tree-children {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    position: relative;
+}
+
+.tree-children::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 10px;
+    background: #bdc3c7;
+}
+
+.tree-legend {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+/* Enhanced XAI Chart Container Styles */
+.xai-chart-container {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #ecf0f1;
+    transition: box-shadow 0.3s ease;
+    min-height: 300px;
+}
+
+.xai-chart-container:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.xai-chart-container h4 {
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.xai-chart-container p {
+    color: #7f8c8d;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.xai-chart-container canvas {
+    max-height: 280px;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Grid Layout for XAI Sections */
+.xai-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+@media (min-width: 1200px) {
+    .xai-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1600px) {
+    .xai-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Enhanced Widget Styles for XAI */
+.widget h3 {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+/* Performance Metrics Specific Styles */
+#performance-metrics-chart,
+#learning-curves-chart,
+#validation-curves-chart {
+    min-height: 300px;
+}
+
+#correlation-heatmap-chart {
+    min-height: 350px;
+}
+
+/* LLM Analysis Specific Styles */
+#sentiment-timeline-chart,
+#topic-modeling-visualization {
+    min-height: 280px;
+}
+
+#attention-weights-chart {
+    min-height: 300px;
+}
+
+#embedding-tsne-chart {
+    min-height: 320px;
+}
+
+/* Advanced Interpretability Styles */
+#decision-tree-container {
+    min-height: 300px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+#gradient-attribution-chart,
+#lrp-chart,
+#integrated-gradients-chart {
+    min-height: 280px;
+}
+
+/* Real-time Monitoring Styles */
+#confidence-distribution-chart,
+#drift-detection-chart,
+#prediction-actual-chart,
+#ensemble-voting-chart {
+    min-height: 280px;
+}
+
+/* Enhanced Tooltip Styles */
+.chart-tooltip {
+    background: rgba(44, 62, 80, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Loading Animation for Charts */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 280px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.chart-loading::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ecf0f1;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Section Headers for XAI Categories */
+.widget h3:before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin-right: 12px;
+    border-radius: 2px;
+    vertical-align: middle;
+}
+
+/* Responsive Design for XAI Visualizations */
+@media (max-width: 768px) {
+    .xai-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .xai-chart-container {
+        padding: 16px;
+        min-height: 250px;
+    }
+    
+    .xai-chart-container canvas {
+        max-height: 200px;
+    }
+    
+    .decision-tree {
+        padding: 16px;
+    }
+    
+    .tree-node, .tree-leaf {
+        min-width: 120px;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    #decision-tree-container {
+        min-height: 250px;
+        padding: 16px;
+    }
+}
+
+/* Enhanced Chart Container Loading States */
+.xai-chart-container.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* === Correlation Heatmap Styles === */
+.correlation-heatmap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.heatmap-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.heatmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.heatmap-table th,
+.heatmap-table td {
+    padding: 8px 4px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.3);
+    min-width: 60px;
+}
+
+.heatmap-table th {
+    background-color: #34495e;
+    color: white;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.feature-header {
+    background-color: #34495e !important;
+    color: white !important;
+    font-weight: 600;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+.correlation-cell {
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.correlation-cell:hover {
+    transform: scale(1.1);
+    z-index: 10;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+.legend-color.positive {
+    background: rgba(52, 152, 219, 0.8);
+}
+
+.legend-color.negative {
+    background: rgba(231, 76, 60, 0.8);
+}
+
+.legend-note {
+    font-style: italic;
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+/* Responsive adjustments for heatmap */
+@media (max-width: 768px) {
+    .heatmap-table {
+        font-size: 10px;
+    }
+    
+    .heatmap-table th,
+    .heatmap-table td {
+        padding: 6px 2px;
+        min-width: 45px;
+    }
+    
+    .correlation-cell {
+        font-size: 10px;
+    }
+    
+    .heatmap-legend {
+        font-size: 11px;
+        gap: 15px;
     }
 }

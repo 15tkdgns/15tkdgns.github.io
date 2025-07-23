@@ -1127,10 +1127,132 @@ class ModelTrainer:
     }
 
     initializeXAIPage() {
-        console.log('initializeXAIPage called');
-        if (window.dashboard && window.dashboard.extensions) {
-            window.dashboard.extensions.loadXAIData();
+        console.log('[XAI DEBUG] initializeXAIPage called');
+        console.log('[XAI DEBUG] window.dashboard:', window.dashboard);
+        console.log('[XAI DEBUG] window.dashboard.extensions:', window.dashboard ? window.dashboard.extensions : 'dashboard not available');
+        
+        // Wait for dashboard to be fully initialized
+        this.waitForDashboard().then(() => {
+            if (window.dashboard && window.dashboard.extensions) {
+                console.log('[XAI DEBUG] Dashboard and extensions available, calling loadXAIData');
+                // Ensure XAI data is loaded and charts are rendered
+                window.dashboard.extensions.loadXAIData().then(() => {
+                    console.log('[XAI DEBUG] XAI data loading completed');
+                    
+                    // Setup refresh button event listener
+                    this.setupXAIRefreshButton();
+                    
+                    // Trigger initial XAI stock analysis
+                    if (window.dashboard.handleXaiStockChange) {
+                        console.log('[XAI DEBUG] Triggering initial XAI stock analysis for NVDA');
+                        window.dashboard.handleXaiStockChange('NVDA');
+                    }
+                }).catch(error => {
+                    console.error('[XAI DEBUG] Error loading XAI data:', error);
+                    // Show mock data instead
+                    this.showXAIFallback();
+                });
+            } else {
+                console.error('[XAI DEBUG] Dashboard or extensions not available after waiting');
+                this.showXAIFallback();
+            }
+        });
+    }
+
+    // Wait for dashboard initialization with timeout
+    waitForDashboard(maxAttempts = 50, intervalMs = 100) {
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            
+            const checkDashboard = () => {
+                attempts++;
+                console.log(`[XAI DEBUG] Checking dashboard availability (attempt ${attempts}/${maxAttempts})`);
+                
+                if (window.dashboard && window.dashboard.extensions) {
+                    console.log('[XAI DEBUG] Dashboard found and ready');
+                    resolve();
+                } else if (attempts >= maxAttempts) {
+                    console.error('[XAI DEBUG] Dashboard not available after maximum attempts');
+                    reject(new Error('Dashboard not available'));
+                } else {
+                    setTimeout(checkDashboard, intervalMs);
+                }
+            };
+            
+            checkDashboard();
+        });
+    }
+
+    // Fallback for when dashboard is not available
+    showXAIFallback() {
+        console.log('[XAI DEBUG] Showing XAI fallback with static content');
+        this.showXAIErrorMessage();
+        
+        // Try to show some static content
+        const containers = [
+            'feature-importance-chart',
+            'shap-summary-plot', 
+            'shap-force-plot',
+            'lime-explanation'
+        ];
+        
+        containers.forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="xai-loading">
+                        <h4>${containerId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                        <p>Dashboard system is still initializing. Please wait or refresh the page.</p>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    // Setup XAI refresh button event listener
+    setupXAIRefreshButton() {
+        console.log('[XAI DEBUG] Setting up refresh button event listener');
+        const refreshBtn = document.getElementById('refresh-xai-btn');
+        
+        if (refreshBtn) {
+            // Remove any existing listeners
+            refreshBtn.removeEventListener('click', this.handleXAIRefresh);
+            
+            // Add new listener
+            this.handleXAIRefresh = () => {
+                console.log('[XAI DEBUG] Refresh button clicked');
+                
+                if (window.dashboard && typeof window.dashboard.refreshXAIData === 'function') {
+                    console.log('[XAI DEBUG] Calling dashboard.refreshXAIData');
+                    window.dashboard.refreshXAIData();
+                } else {
+                    console.error('[XAI DEBUG] dashboard.refreshXAIData not available');
+                    console.log('[XAI DEBUG] window.dashboard:', window.dashboard);
+                    console.log('[XAI DEBUG] Available methods:', window.dashboard ? Object.getOwnPropertyNames(window.dashboard) : 'No dashboard');
+                }
+            };
+            
+            refreshBtn.addEventListener('click', this.handleXAIRefresh);
+            console.log('[XAI DEBUG] Refresh button event listener added successfully');
+        } else {
+            console.error('[XAI DEBUG] Refresh button not found');
         }
+    }
+
+    showXAIErrorMessage() {
+        const containers = [
+            'feature-importance-chart',
+            'shap-summary-plot', 
+            'shap-force-plot',
+            'lime-explanation'
+        ];
+        
+        containers.forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '<div class="xai-error"><p>XAI system not initialized. Check console for details.</p></div>';
+            }
+        });
     }
 }
 

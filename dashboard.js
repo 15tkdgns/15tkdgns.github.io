@@ -25,13 +25,33 @@ class DashboardManager {
         this.setupEventListeners();
         
         // Initialize extended features
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof DashboardExtensions !== 'undefined') {
-                this.extensions = new DashboardExtensions(this);
-                this.extensions.init();
-            }
-        });
+        this.initializeExtensions();
         this.updateAPIStatusDisplay(); // Add API status display
+    }
+
+    // Initialize extensions
+    initializeExtensions() {
+        console.log('[DASHBOARD DEBUG] Initializing extensions...');
+        console.log('[DASHBOARD DEBUG] DashboardExtensions available:', typeof DashboardExtensions !== 'undefined');
+        
+        if (typeof DashboardExtensions !== 'undefined') {
+            try {
+                console.log('[DASHBOARD DEBUG] Creating DashboardExtensions instance...');
+                this.extensions = new DashboardExtensions(this);
+                console.log('[DASHBOARD DEBUG] DashboardExtensions instance created:', this.extensions);
+                
+                // Set global reference for router access
+                window.dashboard = this;
+                console.log('[DASHBOARD DEBUG] window.dashboard set to:', window.dashboard);
+                
+                this.extensions.init();
+                console.log('[DASHBOARD DEBUG] DashboardExtensions initialized successfully');
+            } catch (error) {
+                console.error('[DASHBOARD DEBUG] Error initializing DashboardExtensions:', error);
+            }
+        } else {
+            console.error('[DASHBOARD DEBUG] DashboardExtensions class not found. Make sure dashboard-extended.js is loaded first.');
+        }
     }
 
     // Common chart settings (improved label readability)
@@ -262,10 +282,10 @@ class DashboardManager {
                         const parsedLogs = this.parseLogFile(text);
                         logs = logs.concat(parsedLogs);
                     } else {
-                        console.info(`Log file ${logFile} not found or failed to load (${response.status} ${response.statusText}). Using mock data.`);
+                        console.error(`[DEBUG] Log file ${logFile} not found or failed to load (${response.status} ${response.statusText}). Using mock data.`);
                     }
                 } catch (error) {
-                    console.info(`Error loading log file ${logFile}:`, error, `. Using mock data.`);
+                    console.error(`[DEBUG] Error loading log file ${logFile}:`, error, `. Using mock data.`);
                 }
             }
 
@@ -284,7 +304,7 @@ class DashboardManager {
     parseLogFile(logText) {
         const lines = logText.split('\n').filter(line => line.trim());
         return lines.slice(-10).map((line, index) => {
-            const timestamp = new Date().toLocaleTimeString('en-US'); // Use current time as timestamp is not in log file
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }); // Use current time as timestamp is not in log file
             let level = 'INFO';
             let message = line;
             
@@ -458,13 +478,23 @@ class DashboardManager {
         const maxVolumeStock = volumeData.labels[volumeData.data.indexOf(maxVolume)];
         
         // Unusual volume detected (over 1.5x average)
-        const abnormalVolumes = volumeData.data.filter(vol => vol > avgVolume * 1.5);
+        const abnormalVolumes = volumeData.data
+            .map((vol, index) => ({ symbol: volumeData.labels[index], volume: vol }))
+            .filter(item => item.volume > avgVolume * 1.5);
         
         // Update HTML
         document.getElementById('total-volume').textContent = totalVolume.toFixed(1) + 'M';
         document.getElementById('avg-volume').textContent = avgVolume.toFixed(1) + 'M';
         document.getElementById('max-volume').textContent = `${maxVolumeStock} (${maxVolume}M)`;
-        document.getElementById('volume-alerts').textContent = abnormalVolumes.length + ' cases';
+        
+        const volumeAlertsElement = document.getElementById('volume-alerts');
+        if (abnormalVolumes.length > 0) {
+            volumeAlertsElement.textContent = `${abnormalVolumes.length} cases (${abnormalVolumes.map(item => item.symbol).join(', ')})`;
+            volumeAlertsElement.classList.add('alert');
+        } else {
+            volumeAlertsElement.textContent = 'None';
+            volumeAlertsElement.classList.remove('alert');
+        }
     }
 
     // Model comparison chart
@@ -556,9 +586,10 @@ class DashboardManager {
         const now = new Date();
         for (let i = hours; i >= 0; i--) {
             const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-            labels.push(time.toLocaleTimeString('en-US', { 
+            labels.push(time.toLocaleTimeString('ko-KR', { 
                 hour: '2-digit', 
-                minute: '2-digit' 
+                minute: '2-digit',
+                hourCycle: 'h23'
             }));
         }
         return labels;
@@ -579,8 +610,8 @@ class DashboardManager {
     // Display last update time
     updateLastUpdateTime() {
         const now = new Date();
-        const timeString = now.toLocaleString('en-US');
-        document.getElementById('last-update').textContent = `Last Updated: ${timeString}`;
+        const timeString = now.toLocaleString('ko-KR', { hour12: false });
+        document.getElementById('last-update').textContent = `Last Updated: ${timeString} KST`;
     }
 
     // Set up event listeners
@@ -709,12 +740,23 @@ class DashboardManager {
 
     // Handle XAI stock change
     handleXaiStockChange(stockSymbol) {
-        console.log(`Selected stock for XAI analysis: ${stockSymbol}`);
-        if (this.extensions && typeof this.extensions.renderLocalXaiAnalysis === 'function') {
-            this.extensions.renderLocalXaiAnalysis(stockSymbol);
+        console.log(`[XAI DEBUG] Selected stock for XAI analysis: ${stockSymbol}`);
+        console.log(`[XAI DEBUG] Extensions object:`, this.extensions);
+        console.log(`[XAI DEBUG] Extensions type:`, typeof this.extensions);
+        
+        if (this.extensions) {
+            console.log(`[XAI DEBUG] Extensions available, checking renderLocalXaiAnalysis method...`);
+            console.log(`[XAI DEBUG] renderLocalXaiAnalysis type:`, typeof this.extensions.renderLocalXaiAnalysis);
+            
+            if (typeof this.extensions.renderLocalXaiAnalysis === 'function') {
+                console.log(`[XAI DEBUG] Calling renderLocalXaiAnalysis for ${stockSymbol}`);
+                this.extensions.renderLocalXaiAnalysis(stockSymbol);
+            } else {
+                console.error(`[XAI DEBUG] renderLocalXaiAnalysis is not a function:`, this.extensions.renderLocalXaiAnalysis);
+            }
         } else {
-            // This is expected behavior when XAI extensions are not loaded
-            console.debug('XAI extensions not available for stock:', stockSymbol);
+            console.error(`[XAI DEBUG] Extensions not available. This indicates the DashboardExtensions class was not loaded or instantiated properly.`);
+            console.error(`[XAI DEBUG] Make sure dashboard-extended.js is loaded before dashboard.js`);
         }
     }
 
@@ -788,7 +830,7 @@ class DashboardManager {
         
         for (let i = 0; i < 8; i++) {
             const now = new Date();
-            const timestamp = new Date(now.getTime() - i * 60000).toLocaleTimeString('ko-KR');
+            const timestamp = new Date(now.getTime() - i * 60000).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             logs.push({
                 timestamp,
                 level: levels[Math.floor(Math.random() * levels.length)],
@@ -797,6 +839,59 @@ class DashboardManager {
         }
         
         return logs;
+    }
+
+    // Show notification message to user
+    showNotification(message, type = 'info') {
+        console.log(`[NOTIFICATION] ${type.toUpperCase()}: ${message}`);
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <span class="notification-message">${message}</span>
+            <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        // Add to page
+        let notificationContainer = document.getElementById('notification-container');
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.id = 'notification-container';
+            notificationContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 400px;
+            `;
+            document.body.appendChild(notificationContainer);
+        }
+        
+        notificationContainer.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Refresh XAI Data - Direct method
+    refreshXAIData() {
+        console.log('[DASHBOARD DEBUG] refreshXAIData called directly');
+        
+        if (this.extensions && typeof this.extensions.refreshXAIData === 'function') {
+            console.log('[DASHBOARD DEBUG] Calling extensions.refreshXAIData');
+            this.extensions.refreshXAIData();
+        } else {
+            console.error('[DASHBOARD DEBUG] Extensions or refreshXAIData not available');
+            console.log('[DASHBOARD DEBUG] Extensions:', this.extensions);
+            
+            // Show error notification
+            this.showNotification('XAI refresh functionality not available', 'error');
+        }
     }
 }
 
