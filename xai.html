@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XAI Test</title>
+    <style>
+        .test-container { padding: 20px; }
+        .xai-chart-container { border: 1px solid #ccc; margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>XAI Test Page</h1>
+        <div id="feature-importance-chart" class="xai-chart-container">
+            <p>Feature Importance Chart Container</p>
+        </div>
+        <div id="shap-summary-plot" class="xai-chart-container">
+            <p>SHAP Summary Plot Container</p>
+        </div>
+        <div id="confusion-matrix" class="xai-chart-container">
+            <p>Confusion Matrix Container</p>
+        </div>
+        <div id="partial-dependence-plot" class="xai-chart-container">
+            <p>Partial Dependence Plot Container</p>
+        </div>
+        <div id="shap-force-plot" class="xai-chart-container">
+            <p>SHAP Force Plot Container</p>
+        </div>
+        <div id="lime-explanation" class="xai-chart-container">
+            <p>LIME Explanation Container</p>
+        </div>
+        <div id="counterfactual-what-if" class="xai-chart-container">
+            <p>Counterfactual What-if Container</p>
+        </div>
+    </div>
+
+    <script>
+        // Mock XAI extension class for testing
+        class TestXAI {
+            constructor() {
+                this.xaiData = this.generateMockXAIData();
+            }
+
+            generateMockXAIData() {
+                console.log('생성: 모의 XAI 데이터');
+                return {
+                    explainability: {
+                        feature_importance_methods: {
+                            random_forest_builtin: {
+                                features: ['volatility', 'volume', 'price_change', 'rsi', 'macd'],
+                                importance: [0.25, 0.18, 0.15, 0.12, 0.10]
+                            }
+                        }
+                    }
+                };
+            }
+
+            renderFeatureImportance() {
+                console.log('렌더링: 특성 중요도');
+                const container = document.getElementById('feature-importance-chart');
+                if (!container) {
+                    console.warn('feature-importance-chart 컨테이너를 찾을 수 없습니다.');
+                    return;
+                }
+                container.innerHTML = '<h4>특성 중요도 테스트</h4><p>✅ 렌더링 성공!</p>';
+            }
+
+            renderConfusionMatrix() {
+                console.log('렌더링: 혼동 행렬');
+                const container = document.getElementById('confusion-matrix');
+                if (!container) return;
+                container.innerHTML = '<h4>혼동 행렬 테스트</h4><p>✅ 렌더링 성공!</p>';
+            }
+
+            testAll() {
+                console.log('XAI 테스트 시작');
+                this.renderFeatureImportance();
+                this.renderConfusionMatrix();
+                console.log('XAI 테스트 완료');
+            }
+        }
+
+        // 페이지 로드 시 테스트 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            const test = new TestXAI();
+            test.testAll();
+        });
+    </script>
+</body>
+</html>

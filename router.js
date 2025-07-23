@@ -16,7 +16,8 @@ class Router {
             'data': '데이터 탐색기',
             'code': '소스 코드',
             'logs': '시스템 로그',
-            'settings': '설정'
+            'settings': '설정',
+            'xai': 'XAI 분석'
         };
 
         // 네비게이션 클릭 이벤트 설정
@@ -123,6 +124,9 @@ class Router {
                 break;
             case 'settings':
                 this.initializeSettingsPage();
+                break;
+            case 'xai':
+                this.initializeXAIPage();
                 break;
         }
     }
@@ -1039,6 +1043,12 @@ class ModelTrainer:
             data.push(Math.max(100, basePrice));
         }
         return data;
+    }
+
+    initializeXAIPage() {
+        if (window.dashboard && window.dashboard.extensions) {
+            window.dashboard.extensions.loadXAIData();
+        }
     }
 }
 

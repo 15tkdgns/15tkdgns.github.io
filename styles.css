@@ -28,15 +28,784 @@ html, body {
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f5f6fa;
     min-height: 100vh;
     color: #333;
     /* overflow-x: hidden; */ /* 왼쪽 잘림 문제 해결을 위해 제거 */
 }
 
+/* Progress Page Styles */
+.progress-container {
+    padding: 20px;
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.completion-summary {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 20px;
+}
+
+.completion-circle {
+    text-align: center;
+    position: relative;
+}
+
+.circle-progress {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(#28a745 calc(var(--percent, 95) * 1%), #e9ecef 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 0 auto 10px;
+}
+
+.circle-progress::before {
+    content: '';
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.circle-progress .percentage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #28a745;
+    z-index: 1;
+}
+
+.completion-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 14px;
+}
+
+.component-progress {
+    padding: 20px;
+}
+
+.progress-item {
+    margin-bottom: 25px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-header span:first-child {
+    font-weight: 600;
+    color: #333;
+}
+
+.progress-percent {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #28a745;
+    transition: width 0.3s ease;
+}
+
+.progress-details {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.system-status-detail {
+    padding: 20px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-badge.passed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.active {
+    background: #cce5ff;
+    color: #0056b3;
+}
+
+.status-badge.running {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.healthy {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.update-log {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.log-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border-left: 4px solid transparent;
+}
+
+.log-item.completed {
+    background: #f8fffe;
+    border-left-color: #28a745;
+}
+
+.log-item.in-progress {
+    background: #fffbf0;
+    border-left-color: #ffc107;
+}
+
+.log-time {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    min-width: 110px;
+}
+
+.log-content strong {
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.log-content p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* 차트 라벨 가독성 개선 */
+.chart-container {
+    position: relative;
+    padding: 10px;
+    overflow: visible;
+}
+
+.chart-wrapper {
+    position: relative;
+    padding: 20px 10px 40px 10px; /* 차트 주변에 여백 추가 */
+}
+
+/* Chart.js 라벨 개선 */
+canvas {
+    max-height: 400px !important;
+    max-width: 100% !important;
+    margin: 20px auto;
+    display: block;
+}
+
+/* 차트 컨테이너 강제 크기 제한 */
+.widget canvas {
+    max-width: calc(100% - 40px) !important;
+    max-height: 350px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* 반응형 차트 컨테이너 */
+@media (max-width: 768px) {
+    .chart-wrapper {
+        padding: 15px 5px 35px 5px;
+    }
+    
+    canvas {
+        max-height: 250px !important;
+        max-width: calc(100% - 20px) !important;
+    }
+}
+
+/* 뉴스 링크 스타일 개선 */
+.news-link {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.news-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.news-title-text {
+    color: #333;
+    cursor: default;
+}
+
+.news-item {
+    transition: transform 0.2s ease;
+}
+
+.news-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 주가 등락 색상 표시 */
+.price-change {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.price-change.up, .prediction-direction.up {
+    color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.price-change.down, .prediction-direction.down {
+    color: #0066cc;
+    background-color: #cce7ff;
+}
+
+.price-change.neutral {
+    color: #666;
+    background-color: #f8f9fa;
+}
+
+/* 예측 결과 아이콘 개선 */
+.prediction-direction.up::before {
+    content: "▲ ";
+    color: #dc3545;
+}
+
+.prediction-direction.down::before {
+    content: "▼ ";
+    color: #0066cc;
+}
+
+.prediction-direction.neutral::before {
+    content: "◆ ";
+    color: #666;
+}
+
+/* 주식 종목 선택기 */
+.stock-selector-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.stock-selector-label {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.stock-selector {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.chart-description {
+    margin-top: 10px;
+    padding: 10px;
+    background: #e3f2fd;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1565c0;
+}
+
+.model-performance-info {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.model-performance-info strong {
+    color: #856404;
+}
+
+/* 뉴스 피드 스크롤 관련 */
+.news-feed {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.news-feed-controls {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.news-feed-controls button {
+    padding: 8px 16px;
+    margin-right: 10px;
+}
+
+.loading-indicator {
+    color: #666;
+    font-style: italic;
+}
+
+.scroll-end-message {
+    text-align: center;
+    padding: 15px;
+    color: #666;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.news-feed::-webkit-scrollbar {
+    width: 8px;
+}
+
+.news-feed::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.news-feed::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.news-feed::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* 뉴스 아이템 스타일 개선 */
+.news-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 15px 0;
+    margin-bottom: 10px;
+}
+
+.news-item:last-child {
+    border-bottom: none;
+}
+
+.news-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.news-title {
+    margin: 0;
+    flex: 1;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.importance-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 10px;
+    white-space: nowrap;
+}
+
+.importance-badge.high {
+    background: #dc3545;
+    color: white;
+}
+
+.importance-badge.medium {
+    background: #ffc107;
+    color: #212529;
+}
+
+.importance-badge:not(.high):not(.medium) {
+    background: #6c757d;
+    color: white;
+}
+
+/* 추가 UI/UX 개선 - 주가예측 프로그램 스타일 */
+.stock-card {
+    background: #495057;
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 10px 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stock-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.15);
+}
+
+.stock-symbol-large {
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.stock-price {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.prediction-confidence {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.confidence-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: #28a745;
+    transition: width 0.5s ease;
+}
+
+.prediction-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.prediction-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.stock-symbol {
+    font-weight: bold;
+    font-size: 18px;
+    color: #333;
+    min-width: 80px;
+    display: inline-block;
+}
+
+.confidence {
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* 애니메이션 효과 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.news-item,
+.prediction-item,
+.widget {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* 데이터 로딩 스켈레톤 */
+.skeleton {
+    background: #e0e0e0;
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.skeleton-title {
+    height: 20px;
+    width: 70%;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+/* 고급 버튼 스타일 */
+.btn-gradient {
+    background: #495057;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    color: white;
+}
+
+/* 실시간 업데이트 표시기 */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #28a745;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* XAI Analysis Styles */
 .shap-chart {
     padding: 15px;
+}
+
+.xai-error {
+    padding: 20px;
+    background: #f8d7da;
+    color: #721c24;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.feature-importance-bars {
+    padding: 15px 0;
+}
+
+.shap-summary-container {
+    padding: 15px 0;
+}
+
+.shap-feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.shap-feature-info {
+    min-width: 200px;
+    margin-right: 15px;
+}
+
+.shap-value {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.shap-value.positive {
+    color: #28a745;
+}
+
+.shap-value.negative {
+    color: #dc3545;
+}
+
+.shap-bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.shap-bar {
+    height: 20px;
+    border-radius: 10px;
+    min-width: 2px;
+}
+
+.shap-legend {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f1f3f4;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.shap-legend .positive {
+    color: #28a745;
+    margin-right: 20px;
+}
+
+.shap-legend .negative {
+    color: #dc3545;
+}
+
+/* 혼동 행렬 스타일 */
+.confusion-matrix-container {
+    padding: 15px;
+}
+
+.confusion-matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+    max-width: 300px;
+    margin: 0 auto 20px;
+}
+
+.matrix-cell {
+    padding: 15px;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.matrix-cell.header {
+    background: #6c757d;
+    color: white;
+    font-size: 12px;
+}
+
+.matrix-cell.tp {
+    background: #d4edda;
+    color: #155724;
+    font-size: 24px;
+}
+
+.matrix-cell.tn {
+    background: #d4edda;
+    color: #155724;
+    font-size: 24px;
+}
+
+.matrix-cell.fp {
+    background: #f8d7da;
+    color: #721c24;
+    font-size: 24px;
+}
+
+.matrix-cell.fn {
+    background: #f8d7da;
+    color: #721c24;
+    font-size: 24px;
+}
+
+.matrix-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.matrix-metrics .metric {
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 4px;
+    text-align: center;
 }
 
 .shap-feature-bar {
@@ -182,13 +951,13 @@ body {
 }
 
 .rf-bar {
-    background: linear-gradient(90deg, #4ecdc4, #44a08d);
+    background: #28a745;
     height: 100%;
     border-radius: 8px;
 }
 
 .gb-bar {
-    background: linear-gradient(90deg, #f093fb, #f5576c);
+    background: #dc3545;
     height: 100%;
     border-radius: 8px;
 }
@@ -389,7 +1158,7 @@ body {
 
 .confidence-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745, #20c997);
+    background: #28a745;
     border-radius: 8px;
     transition: width 0.3s ease;
 }
@@ -590,7 +1359,7 @@ body {
 }
 
 .nav-link.active {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: var(--primary-color);
     color: white;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
@@ -821,7 +1590,7 @@ body {
     left: 0;
     width: 40px;
     height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: var(--primary-color);
     border-radius: 2px;
 }
 
@@ -851,9 +1620,9 @@ body {
 .metric-card {
     text-align: center;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+    background: #f8f9fa;
     border-radius: 12px;
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    border: 1px solid #dee2e6;
     transition: transform 0.2s ease;
 }
 
@@ -889,12 +1658,12 @@ body {
 }
 
 .performance-table th, .predictions-table th, .data-table th {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
+    background: #f8f9fa;
+    color: #495057;
     padding: 12px;
     text-align: left;
     font-weight: 600;
-    border-bottom: 2px solid var(--secondary-color);
+    border-bottom: 2px solid #dee2e6;
 }
 
 .performance-table td, .predictions-table td, .data-table td {
@@ -903,7 +1672,88 @@ body {
 }
 
 .performance-table tr:hover, .predictions-table tr:hover, .data-table tr:hover {
-    background: rgba(102, 126, 234, 0.05);
+    background: #f8f9fa;
+}
+
+/* 모델 아키텍처 스타일 */
+.model-architecture {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.architecture-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.architecture-item:last-child {
+    border-bottom: none;
+}
+
+.architecture-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.architecture-value {
+    color: #6c757d;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* 거래량 분석 스타일 */
+.volume-analysis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.volume-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.volume-metric {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.volume-metric .metric-label {
+    display: block;
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.volume-metric .metric-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: #495057;
+}
+
+.volume-metric .metric-value.alert {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .volume-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .volume-metric .metric-value {
+        font-size: 14px;
+    }
 }
 
 /* 모델 비교 테이블 컨테이너: 가로 스크롤 가능하도록 설정 */
@@ -924,7 +1774,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 15px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+    background: #f8f9fa;
     border-radius: 10px;
     border-left: 4px solid var(--primary-color);
 }
@@ -1246,7 +2096,7 @@ body {
 .summary-item {
     margin-bottom: 20px;
     padding: 15px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+    background: #f8f9fa;
     border-radius: 8px;
     border-left: 4px solid var(--info-color);
 }
@@ -1287,7 +2137,7 @@ body {
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: var(--primary-color);
 }
 
 /* 페이지 헤더 스타일 */
@@ -1808,7 +2658,7 @@ img, video {
 }
 
 #xai-summary-recommendation {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+    background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     border-left: 4px solid var(--primary-color);

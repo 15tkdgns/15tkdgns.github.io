@@ -31,6 +31,73 @@ class DashboardManager {
         this.updateAPIStatusDisplay(); // API 상태 표시 추가
     }
 
+    // 차트 공통 설정 (라벨 가독성 개선)
+    getCommonChartOptions(chartType = 'line') {
+        const baseOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 25,
+                    bottom: 25,
+                    left: 15,
+                    right: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'center',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        };
+
+        if (chartType === 'line' || chartType === 'bar') {
+            baseOptions.scales = {
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: {
+                            size: 11
+                        }
+                    },
+                    title: {
+                        display: true,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    },
+                    title: {
+                        display: true,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            };
+        }
+
+        return baseOptions;
+    }
+
     // API 상태 표시 업데이트
     updateAPIStatusDisplay() {
         const apiStatus = window.sp500APIManager.getAPIStatus();
@@ -333,6 +400,9 @@ class DashboardManager {
 
         // 거래량 데이터를 기반으로 XAI 선택 메뉴를 업데이트합니다.
         this.updateXaiStockSelector(volumeData);
+        
+        // 거래량 분석 정보 업데이트
+        this.updateVolumeAnalysis(volumeData);
     }
 
     /**
@@ -357,6 +427,26 @@ class DashboardManager {
         if (top5Stocks.length > 0) {
             this.handleXaiStockChange(top5Stocks[0].symbol);
         }
+    }
+
+    /**
+     * 거래량 분석 정보를 업데이트합니다.
+     * @param {object} volumeData - 거래량 데이터
+     */
+    updateVolumeAnalysis(volumeData) {
+        const totalVolume = volumeData.data.reduce((sum, vol) => sum + vol, 0);
+        const avgVolume = totalVolume / volumeData.data.length;
+        const maxVolume = Math.max(...volumeData.data);
+        const maxVolumeStock = volumeData.labels[volumeData.data.indexOf(maxVolume)];
+        
+        // 이상 거래량 감지 (평균의 1.5배 이상)
+        const abnormalVolumes = volumeData.data.filter(vol => vol > avgVolume * 1.5);
+        
+        // HTML 업데이트
+        document.getElementById('total-volume').textContent = totalVolume.toFixed(1) + 'M';
+        document.getElementById('avg-volume').textContent = avgVolume.toFixed(1) + 'M';
+        document.getElementById('max-volume').textContent = `${maxVolumeStock} (${maxVolume}M)`;
+        document.getElementById('volume-alerts').textContent = abnormalVolumes.length + '건';
     }
 
     // 모델 비교 차트
