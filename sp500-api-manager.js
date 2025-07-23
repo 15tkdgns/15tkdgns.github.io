@@ -56,7 +56,7 @@ class SP500APIManager {
                 supported: true
             },
             
-            // 4. Polygon.io (무료 + 유료)
+            // 4. Polygon.io에서 데이터 수집
             polygon: {
                 baseUrl: 'https://api.polygon.io/v2',
                 endpoints: {
@@ -70,7 +70,7 @@ class SP500APIManager {
                 supported: true
             },
             
-            // 5. IEX Cloud (무료 + 유료)
+            // 5. IEX Cloud에서 데이터 수집
             iexCloud: {
                 baseUrl: 'https://cloud.iexapis.com/stable',
                 endpoints: {
@@ -84,7 +84,7 @@ class SP500APIManager {
                 supported: true
             },
             
-            // 6. Yahoo Finance (무료 - 비공식)
+            // 6. Yahoo Finance에서 데이터 수집 (무료)
             yahooFinance: {
                 baseUrl: 'https://query1.finance.yahoo.com/v8/finance/chart',
                 proxyUrl: 'https://api.allorigins.win/get?url=',
@@ -120,11 +120,11 @@ class SP500APIManager {
     loadAPIKeys() {
         // 로컬 스토리지에서 API 키 로드
         this.apiKeys = {
-            alphaVantage: localStorage.getItem('alpha_vantage_key') || process?.env?.ALPHA_VANTAGE_KEY,
-            financialModelingPrep: localStorage.getItem('fmp_key') || process?.env?.FMP_KEY,
-            twelveData: localStorage.getItem('twelve_data_key') || process?.env?.TWELVE_DATA_KEY,
-            polygon: localStorage.getItem('polygon_key') || process?.env?.POLYGON_KEY,
-            iexCloud: localStorage.getItem('iex_key') || process?.env?.IEX_KEY
+            alphaVantage: localStorage.getItem('alpha_vantage_key'),
+            financialModelingPrep: localStorage.getItem('fmp_key'),
+            twelveData: localStorage.getItem('twelve_data_key'),
+            polygon: localStorage.getItem('polygon_key'),
+            iexCloud: localStorage.getItem('iex_key')
         };
         
         // 각 API의 초기 상태 설정
@@ -709,3 +709,7 @@ class SP500APIManager {
         
         return results;
     }
+}
+
+// 전역 인스턴스 생성
+window.sp500APIManager = new SP500APIManager();

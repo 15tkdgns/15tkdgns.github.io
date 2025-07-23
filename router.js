@@ -1,4 +1,4 @@
-// SPA 라우터 클래스
+// SPA Router Class
 class Router {
     constructor() {
         this.routes = {};
@@ -7,30 +7,30 @@ class Router {
     }
 
     init() {
-        // 페이지 타이틀 매핑
+        // Page title mapping
         this.pageTitles = {
-            'dashboard': '대시보드',
-            'models': '모델 성능',
-            'predictions': '실시간 예측',
-            'news': '뉴스 분석',
-            'data': '데이터 탐색기',
-            'code': '소스 코드',
-            'logs': '시스템 로그',
-            'settings': '설정',
-            'xai': 'XAI 분석'
+            'dashboard': 'Dashboard',
+            'models': 'Model Performance',
+            'predictions': 'Real-time Predictions',
+            'news': 'News Analysis',
+            'data': 'Data Explorer',
+            'code': 'Source Code',
+            'logs': 'System Logs',
+            'settings': 'Settings',
+            'xai': 'XAI Analysis'
         };
 
-        // 네비게이션 클릭 이벤트 설정
+        // Set up navigation click events
         this.setupNavigation();
         
-        // 브라우저 뒤로가기/앞으로가기 처리
+        // Handle browser back/forward
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.page) {
                 this.navigateTo(e.state.page, false);
             }
         });
 
-        // 초기 페이지 로드
+        // Initial page load
         const initialPage = this.getPageFromHash() || 'dashboard';
         this.navigateTo(initialPage, false);
     }
@@ -47,16 +47,19 @@ class Router {
     }
 
     navigateTo(page, updateHistory = true) {
+        console.log(`Navigating to page: ${page}`);
         // 현재 활성 페이지 숨기기
         const currentPageElement = document.querySelector('.page.active');
         if (currentPageElement) {
             currentPageElement.classList.remove('active');
+            console.log(`Removed active class from: ${currentPageElement.id}`);
         }
 
         // 새 페이지 표시
         const newPageElement = document.getElementById(`page-${page}`);
         if (newPageElement) {
             newPageElement.classList.add('active');
+            console.log(`Added active class to: ${newPageElement.id}`);
         }
 
         // 네비게이션 활성 상태 업데이트
@@ -68,12 +71,14 @@ class Router {
         // URL 업데이트
         if (updateHistory) {
             window.history.pushState({ page }, '', `#${page}`);
+            console.log(`URL updated to: #${page}`);
         }
 
         // 페이지별 초기화 실행
         this.initializePage(page);
 
         this.currentPage = page;
+        console.log(`Current page set to: ${this.currentPage}`);
     }
 
     updateActiveNavigation(page) {
@@ -87,9 +92,9 @@ class Router {
     }
 
     updatePageTitle(page) {
-        const title = this.pageTitles[page] || '대시보드';
+        const title = this.pageTitles[page] || 'Dashboard';
         document.getElementById('page-title').textContent = title;
-        document.title = `AI 주식 예측 시스템 - ${title}`;
+        document.title = `AI Stock Prediction System - ${title}`;
     }
 
     getPageFromHash() {
@@ -98,10 +103,11 @@ class Router {
     }
 
     initializePage(page) {
+        console.log(`Initializing page: ${page}`);
         switch(page) {
             case 'dashboard':
                 if (window.dashboard) {
-                    window.dashboard.refreshDashboard();
+                    window.dashboard.refreshAllData();
                 }
                 break;
             case 'models':
@@ -132,7 +138,8 @@ class Router {
     }
 
     initializeModelsPage() {
-        // 모델 성능 테이블 생성
+        console.log('initializeModelsPage called');
+        // Create model performance table
         const tableBody = document.getElementById('model-performance-table');
         if (tableBody) {
             const models = [
@@ -143,7 +150,7 @@ class Router {
                     recall: 0.891,
                     f1Score: 0.873,
                     processingTime: 0.145,
-                    status: '활성'
+                    status: 'Active'
                 },
                 {
                     name: 'Gradient Boosting',
@@ -152,7 +159,7 @@ class Router {
                     recall: 0.928,
                     f1Score: 0.911,
                     processingTime: 0.234,
-                    status: '활성'
+                    status: 'Active'
                 },
                 {
                     name: 'LSTM',
@@ -161,7 +168,7 @@ class Router {
                     recall: 0.903,
                     f1Score: 0.887,
                     processingTime: 1.456,
-                    status: '대기'
+                    status: 'Standby'
                 }
             ];
 
@@ -172,16 +179,16 @@ class Router {
                     <td>${(model.precision * 100).toFixed(1)}%</td>
                     <td>${(model.recall * 100).toFixed(1)}%</td>
                     <td>${(model.f1Score * 100).toFixed(1)}%</td>
-                    <td>${model.processingTime}초</td>
-                    <td><span class="status-badge ${model.status === '활성' ? 'active' : 'inactive'}">${model.status}</span></td>
+                    <td>${model.processingTime} seconds</td>
+                    <td><span class="status-badge ${model.status === 'Active' ? 'active' : 'inactive'}">${model.status}</span></td>
                 </tr>
             `).join('');
         }
 
-        // 모델 아키텍처 표시
+        // Display model architecture
         this.displayModelArchitecture();
         
-        // 하이퍼파라미터 표시
+        // Display hyperparameters
         this.displayHyperparameters();
     }
 
@@ -192,25 +199,25 @@ class Router {
                 <div class="architecture-item">
                     <h4>Random Forest</h4>
                     <ul>
-                        <li>트리 개수: 100</li>
-                        <li>최대 깊이: 15</li>
-                        <li>특성 선택: sqrt</li>
+                        <li>Number of Trees: 100</li>
+                        <li>Max Depth: 15</li>
+                        <li>Feature Selection: sqrt</li>
                     </ul>
                 </div>
                 <div class="architecture-item">
                     <h4>Gradient Boosting</h4>
                     <ul>
-                        <li>학습률: 0.1</li>
-                        <li>트리 개수: 200</li>
-                        <li>최대 깊이: 8</li>
+                        <li>Learning Rate: 0.1</li>
+                        <li>Number of Trees: 200</li>
+                        <li>Max Depth: 8</li>
                     </ul>
                 </div>
                 <div class="architecture-item">
                     <h4>LSTM</h4>
                     <ul>
-                        <li>은닉층: 128</li>
-                        <li>시퀀스 길이: 30</li>
-                        <li>드롭아웃: 0.2</li>
+                        <li>Hidden Layers: 128</li>
+                        <li>Sequence Length: 30</li>
+                        <li>Dropout: 0.2</li>
                     </ul>
                 </div>
             `;
@@ -222,17 +229,17 @@ class Router {
         if (container) {
             container.innerHTML = `
                 <div class="param-group">
-                    <h4>공통 설정</h4>
+                    <h4>Common Settings</h4>
                     <div class="param-item">
-                        <span>검증 분할:</span>
+                        <span>Validation Split:</span>
                         <span>0.2</span>
                     </div>
                     <div class="param-item">
-                        <span>랜덤 시드:</span>
+                        <span>Random Seed:</span>
                         <span>42</span>
                     </div>
                     <div class="param-item">
-                        <span>교차 검증:</span>
+                        <span>Cross-Validation:</span>
                         <span>5-Fold</span>
                     </div>
                 </div>
@@ -241,32 +248,41 @@ class Router {
     }
 
     initializePredictionsPage() {
-        // 예측 차트 초기화
+        console.log('initializePredictionsPage called');
+        // Initialize prediction chart
         this.initializePredictionChart();
         
-        // 신뢰도 미터 생성
+        // Create confidence meters
         this.createConfidenceMeters();
         
-        // 예측 결과 테이블 업데이트
+        // Update prediction results table
         this.updatePredictionsTable();
+        
+        // Add event listener for stock selector
+        this.setupPredictionStockSelector();
     }
 
-    initializePredictionChart() {
+    initializePredictionChart(stockSymbol = 'AAPL') {
         const ctx = document.getElementById('prediction-chart');
         if (ctx && ctx.getContext) {
-            const chart = new Chart(ctx.getContext('2d'), {
+            // Destroy existing chart if it exists
+            if (this.predictionChart) {
+                this.predictionChart.destroy();
+            }
+            
+            this.predictionChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: this.generateTimeLabels(20),
                     datasets: [{
-                        label: '실제 가격',
-                        data: this.generateMockPriceData(20),
+                        label: `${stockSymbol} Actual Price`,
+                        data: this.generateMockPriceData(20, stockSymbol),
                         borderColor: '#3498db',
                         backgroundColor: 'rgba(52, 152, 219, 0.1)',
                         fill: true
                     }, {
-                        label: '예측 가격',
-                        data: this.generateMockPriceData(20, 5),
+                        label: `${stockSymbol} Predicted Price`,
+                        data: this.generateMockPriceData(20, stockSymbol, 5),
                         borderColor: '#e74c3c',
                         backgroundColor: 'rgba(231, 76, 60, 0.1)',
                         fill: false,
@@ -276,14 +292,45 @@ class Router {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 10,
+                            bottom: 10,
+                            left: 10
+                        }
+                    },
                     scales: {
+                        x: {
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
                         y: {
-                            beginAtZero: false
+                            beginAtZero: false,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
                         }
                     },
                     plugins: {
                         legend: {
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white'
                         }
                     }
                 }
@@ -343,22 +390,23 @@ class Router {
     }
 
     async initializeNewsPage() {
-        // 실시간 뉴스 분석기 사용
+        console.log('initializeNewsPage called');
+        // Use real-time news analyzer
         if (window.newsAnalyzer) {
-            // 실시간 뉴스 로드
+            // Load real-time news
             const latestNews = window.newsAnalyzer.getLatestNews(15);
             const newsSummary = window.newsAnalyzer.generateNewsSummary();
             
-            // 감정 분석 차트 업데이트 (실제 데이터 사용)
+            // Update sentiment analysis chart (using real data)
             this.initializeSentimentChart(newsSummary.sentimentBreakdown);
             
-            // 뉴스 피드 업데이트 (실제 뉴스 사용)
+            // Update news feed (using real news)
             this.updateNewsFeed(latestNews);
             
-            // 뉴스 요약 업데이트 (실제 분석 결과 사용)
+            // Update news summary (using real analysis results)
             this.updateNewsSummary(newsSummary);
             
-            // 뉴스 업데이트 이벤트 리스너 설정
+            // Set up news update event listener
             window.addEventListener('newsUpdate', (event) => {
                 const { news } = event.detail;
                 const summary = window.newsAnalyzer.generateNewsSummary();
@@ -367,16 +415,16 @@ class Router {
                 this.updateNewsSummary(summary);
                 this.updateSentimentChart(summary.sentimentBreakdown);
                 
-                // 알림 표시
+                // Display notification
                 if (window.dashboard && window.dashboard.extensions) {
                     window.dashboard.extensions.showNotification(
-                        `${news.length}개의 새로운 뉴스가 분석되었습니다.`, 
+                        `${news.length} new news articles analyzed.`, 
                         'info'
                     );
                 }
             });
         } else {
-            // 폴백: 기존 모의 데이터 사용
+            // Fallback: Use existing mock data
             this.initializeSentimentChart();
             this.updateNewsFeed();
             this.updateNewsSummary();
@@ -401,7 +449,7 @@ class Router {
             this.sentimentChart = new Chart(ctx.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['긍정', '중립', '부정'],
+                    labels: ['Positive', 'Neutral', 'Negative'],
                     datasets: [{
                         data: data,
                         backgroundColor: ['#27ae60', '#3498db', '#e74c3c'],
@@ -421,7 +469,7 @@ class Router {
                                 label: function(context) {
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                     const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
-                                    return `${context.label}: ${context.raw}개 (${percentage}%)`;
+                                    return `${context.label}: ${context.raw} items (${percentage}%)`;
                                 }
                             }
                         }
@@ -449,32 +497,32 @@ class Router {
         if (container) {
             let newsToDisplay = newsData;
             
-            // 실제 뉴스 데이터가 없으면 모의 데이터 사용
+            // If no real news data, use mock data
             if (!newsToDisplay || newsToDisplay.length === 0) {
                 newsToDisplay = [
                     {
-                        title: 'Fed 금리 인상 결정, 시장 반응은?',
-                        content: '연방준비제도가 기준금리를 0.25% 포인트 인상하며 인플레이션 억제 의지를 보였습니다.',
+                        title: 'Fed Interest Rate Hike Decision, Market Reaction?',
+                        content: 'The Federal Reserve raised its benchmark interest rate by 0.25 percentage points, showing its commitment to curbing inflation.',
                         sentiment: 'negative',
-                        publishedAt: new Date(Date.now() - 120000).toISOString(), // 2분 전
+                        publishedAt: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
                         source: 'Reuters',
                         importance: 0.8,
                         url: '#'
                     },
                     {
-                        title: 'Apple 새로운 iPhone 모델 발표',
-                        content: 'Apple이 혁신적인 기능을 탑재한 새로운 iPhone 시리즈를 공개했습니다.',
+                        title: 'Apple Announces New iPhone Models',
+                        content: 'Apple has unveiled a new iPhone series with innovative features.',
                         sentiment: 'positive',
-                        publishedAt: new Date(Date.now() - 900000).toISOString(), // 15분 전
+                        publishedAt: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
                         source: 'Bloomberg',
                         importance: 0.7,
                         url: '#'
                     },
                     {
-                        title: 'Tesla 3분기 실적 발표',
-                        content: '테슬라가 예상을 뛰어넘는 3분기 실적을 발표하며 주가가 급등했습니다.',
+                        title: 'Tesla Q3 Earnings Announcement',
+                        content: 'Tesla announced better-than-expected Q3 earnings, causing its stock price to surge.',
                         sentiment: 'positive',
-                        publishedAt: new Date(Date.now() - 3600000).toISOString(), // 1시간 전
+                        publishedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
                         source: 'CNBC',
                         importance: 0.9,
                         url: '#'
@@ -499,7 +547,7 @@ class Router {
                             <span class="sentiment-badge sentiment-${news.sentiment}">
                                 ${sentimentText}
                             </span>
-                            ${news.confidence ? `<span class="confidence-badge">신뢰도: ${Math.round(news.confidence * 100)}%</span>` : ''}
+                            ${news.confidence ? `<span class="confidence-badge">Confidence: ${Math.round(news.confidence * 100)}%</span>` : ''}
                         </div>
                         ${news.keywords && news.keywords.length > 0 ? `
                             <div class="news-keywords">
@@ -510,7 +558,7 @@ class Router {
                 `;
             }).join('');
             
-            // 뉴스 필터링 이벤트 설정
+            // Set up news filtering events
             this.setupNewsFiltering();
         }
     }
@@ -521,7 +569,7 @@ class Router {
             let summaries;
             
             if (summaryData && summaryData.keyTrends) {
-                // 실제 분석 데이터 사용
+                // Use actual analysis data
                 const marketImpactText = this.getMarketImpactText(summaryData.marketImpact);
                 const topTrends = summaryData.keyTrends.slice(0, 5).map(trend => trend.keyword).join(', ');
                 const totalNews = summaryData.totalNews || 0;
@@ -529,36 +577,36 @@ class Router {
                 
                 summaries = [
                     {
-                        title: '뉴스 분석 현황',
-                        content: `총 ${totalNews}개의 뉴스를 분석했습니다. ${sentimentInfo}`
+                        title: 'News Analysis Status',
+                        content: `Analyzed ${totalNews} news articles. ${sentimentInfo}`
                     },
                     {
-                        title: '주요 트렌드 키워드',
-                        content: topTrends ? `${topTrends} 등이 주요 관심사로 부상하고 있습니다.` : '다양한 주제의 뉴스가 고르게 보도되고 있습니다.'
+                        title: 'Key Trend Keywords',
+                        content: topTrends ? `${topTrends} are emerging as key interests.` : 'News on various topics is being reported evenly.'
                     },
                     {
-                        title: '시장 영향 평가',
+                        title: 'Market Impact Assessment',
                         content: marketImpactText
                     },
                     {
-                        title: '업데이트 정보',
-                        content: `마지막 분석: ${summaryData.lastUpdate ? new Date(summaryData.lastUpdate).toLocaleTimeString('ko-KR') : '알 수 없음'}`
+                        title: 'Update Information',
+                        content: `Last Analysis: ${summaryData.lastUpdate ? new Date(summaryData.lastUpdate).toLocaleTimeString('en-US') : 'Unknown'}`
                     }
                 ];
             } else {
-                // 기본 요약 정보
+                // Default summary information
                 summaries = [
                     {
-                        title: '주요 트렌드',
-                        content: '오늘 시장은 Fed의 금리 인상 결정으로 인해 변동성이 증가했습니다. 기술주는 하락세를 보이고 있으나, 에너지 섹터는 상승세를 유지하고 있습니다.'
+                        title: 'Key Trends',
+                        content: 'Today, the market experienced increased volatility due to the Fed\'s interest rate hike decision. Technology stocks are declining, but the energy sector maintains an upward trend.'
                     },
                     {
-                        title: '영향도 높은 뉴스',
-                        content: 'Tesla의 3분기 실적 발표와 Apple의 새로운 제품 공개가 시장에 긍정적인 영향을 미치고 있습니다.'
+                        title: 'High Impact News',
+                        content: 'Tesla\'s Q3 earnings announcement and Apple\'s new product launch are positively impacting the market.'
                     },
                     {
-                        title: '시장 전망',
-                        content: '전문가들은 단기적으로는 변동성이 지속될 것으로 예상하지만, 장기적으로는 안정적인 성장세를 보일 것으로 전망하고 있습니다.'
+                        title: 'Market Outlook',
+                        content: 'Experts anticipate continued volatility in the short term but foresee stable growth in the long term.'
                     }
                 ];
             }
@@ -572,7 +620,7 @@ class Router {
         }
     }
 
-    // 뉴스 관련 유틸리티 메서드들
+    // News related utility methods
     getTimeAgo(timestamp) {
         const now = new Date();
         const publishedTime = new Date(timestamp);
@@ -582,52 +630,52 @@ class Router {
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         
-        if (diffMinutes < 1) return '방금 전';
-        if (diffMinutes < 60) return `${diffMinutes}분 전`;
-        if (diffHours < 24) return `${diffHours}시간 전`;
-        if (diffDays < 7) return `${diffDays}일 전`;
+        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        if (diffDays < 7) return `${diffDays} days ago`;
         
-        return publishedTime.toLocaleDateString('ko-KR');
+        return publishedTime.toLocaleDateString('en-US');
     }
 
     getSentimentText(sentiment) {
         const sentimentMap = {
-            'positive': '긍정',
-            'negative': '부정',
-            'neutral': '중립'
+            'positive': 'Positive',
+            'negative': 'Negative',
+            'neutral': 'Neutral'
         };
-        return sentimentMap[sentiment] || '중립';
+        return sentimentMap[sentiment] || 'Neutral';
     }
 
     getImportanceIndicator(importance) {
         if (importance > 0.8) {
-            return '<span class="importance-badge high">⚡ 중요</span>';
+            return '<span class="importance-badge high">⚡ Important</span>';
         } else if (importance > 0.6) {
-            return '<span class="importance-badge medium">📌 주목</span>';
+            return '<span class="importance-badge medium">📌 Noteworthy</span>';
         }
         return '';
     }
 
     getMarketImpactText(marketImpact) {
         const impactMap = {
-            'positive': '전반적으로 긍정적인 뉴스가 많아 시장에 호재로 작용할 것으로 예상됩니다.',
-            'negative': '부정적인 뉴스의 비중이 높아 시장에 악재로 작용할 수 있습니다.',
-            'neutral': '긍정적 뉴스와 부정적 뉴스가 혼재하여 중립적인 시장 분위기를 보이고 있습니다.'
+            'positive': 'A high proportion of positive news is expected to have a positive impact on the market.',
+            'negative': 'A high proportion of negative news may have a negative impact on the market.',
+            'neutral': 'Mixed positive and negative news indicates a neutral market sentiment.'
         };
         return impactMap[marketImpact] || impactMap['neutral'];
     }
 
     getSentimentSummary(sentimentBreakdown) {
-        if (!sentimentBreakdown) return '감정 분석 데이터가 없습니다.';
+        if (!sentimentBreakdown) return 'No sentiment analysis data.';
         
         const total = (sentimentBreakdown.positive || 0) + (sentimentBreakdown.negative || 0) + (sentimentBreakdown.neutral || 0);
-        if (total === 0) return '분석할 뉴스가 없습니다.';
+        if (total === 0) return 'No news to analyze.';
         
         const posPerc = Math.round((sentimentBreakdown.positive || 0) / total * 100);
         const negPerc = Math.round((sentimentBreakdown.negative || 0) / total * 100);
         const neutPerc = Math.round((sentimentBreakdown.neutral || 0) / total * 100);
         
-        return `긍정 ${posPerc}%, 부정 ${negPerc}%, 중립 ${neutPerc}%의 분포를 보이고 있습니다.`;
+        return `Showing a distribution of ${posPerc}% positive, ${negPerc}% negative, and ${neutPerc}% neutral.`;
     }
 
     setupNewsFiltering() {
@@ -671,20 +719,21 @@ class Router {
     }
 
     initializeDataPage() {
-        // 데이터 테이블 초기화
+        console.log('initializeDataPage called');
+        // Initialize data table
         this.loadDataTable('stock_data');
         
-        // 데이터 통계 업데이트
+        // Update data statistics
         this.updateDataStats();
         
-        // 데이터 시각화 차트 초기화
+        // Initialize data visualization chart
         this.initializeDataVisualization();
     }
 
     loadDataTable(datasetType) {
         const table = document.getElementById('data-table');
         if (table) {
-            // 모의 데이터 생성
+            // Generate mock data
             const mockData = this.generateMockData(datasetType);
             
             table.innerHTML = `
@@ -716,8 +765,8 @@ class Router {
                     break;
                 case 'news_data':
                     data.push({
-                        'Title': `뉴스 제목 ${i + 1}`,
-                        'Sentiment': ['긍정', '부정', '중립'][Math.floor(Math.random() * 3)],
+                        'Title': `News Title ${i + 1}`,
+                        'Sentiment': ['Positive', 'Negative', 'Neutral'][Math.floor(Math.random() * 3)],
                         'Score': (Math.random()).toFixed(3),
                         'Date': new Date(Date.now() - i * 3600000).toLocaleDateString()
                     });
@@ -739,15 +788,15 @@ class Router {
         if (container) {
             container.innerHTML = `
                 <div class="stat-item">
-                    <div class="stat-label">총 데이터 수</div>
+                    <div class="stat-label">Total Data Count</div>
                     <div class="stat-value">12,450</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">마지막 업데이트</div>
+                    <div class="stat-label">Last Updated</div>
                     <div class="stat-value">${new Date().toLocaleTimeString()}</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">데이터 품질</div>
+                    <div class="stat-label">Data Quality</div>
                     <div class="stat-value">98.7%</div>
                 </div>
             `;
@@ -760,9 +809,9 @@ class Router {
             const chart = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['1월', '2월', '3월', '4월', '5월'],
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
                     datasets: [{
-                        label: '데이터 수집량',
+                        label: 'Data Collection Volume',
                         data: [1200, 1900, 3000, 2500, 2000],
                         backgroundColor: 'rgba(102, 126, 234, 0.6)',
                         borderColor: 'rgba(102, 126, 234, 1)',
@@ -783,7 +832,8 @@ class Router {
     }
 
     initializeCodePage() {
-        // 파일 선택 이벤트 설정
+        console.log('initializeCodePage called');
+        // Set up file selection event
         const fileSelector = document.getElementById('file-selector');
         if (fileSelector) {
             fileSelector.addEventListener('change', (e) => {
@@ -804,30 +854,30 @@ class Router {
         
         if (codeDisplay) {
             try {
-                // 실제 파일 로드 시도
+                // Attempt to load actual file
                 const response = await fetch(`../${filePath}`);
                 let code;
                 
                 if (response.ok) {
                     code = await response.text();
                 } else {
-                    // 파일이 없으면 모의 코드 표시
+                    // Display mock code if file not found
                     code = this.getMockCode(filePath);
                 }
                 
-                // 언어 감지
+                // Detect language
                 const language = this.detectLanguage(filePath);
                 codeDisplay.className = `language-${language}`;
                 codeDisplay.textContent = code;
                 
-                // Prism.js로 구문 강조 적용
+                // Apply syntax highlighting with Prism.js
                 if (window.Prism) {
                     Prism.highlightElement(codeDisplay);
                 }
                 
             } catch (error) {
-                console.error('파일 로드 실패:', error);
-                codeDisplay.textContent = '// 파일을 로드할 수 없습니다.';
+                console.error('File load failed:', error);
+                codeDisplay.textContent = '// Could not load file.';
             }
         }
     }
@@ -846,7 +896,7 @@ class Router {
 
     getMockCode(filePath) {
         const mockCodes = {
-            'dashboard/dashboard.js': `// 대시보드 메인 JavaScript 파일
+            'dashboard/dashboard.js': `// Main Dashboard JavaScript file
 class DashboardManager {
     constructor() {
         this.charts = {};
@@ -860,13 +910,13 @@ class DashboardManager {
         this.loadInitialData();
     }
     
-    // 차트 설정
+    // Chart setup
     setupCharts() {
         this.setupPerformanceChart();
         this.setupVolumeChart();
     }
 }`,
-            'src/models/model_training.py': `# 모델 훈련 스크립트
+            'src/models/model_training.py': `# Model Training Script
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -877,7 +927,7 @@ class ModelTrainer:
         self.models = {}
         
     def train_random_forest(self, X, y):
-        """Random Forest 모델 훈련"""
+        """Train Random Forest model"""
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42
         )
@@ -892,10 +942,11 @@ class ModelTrainer:
         return model`
         };
         
-        return mockCodes[filePath] || '// 코드를 로드할 수 없습니다.';
+        return mockCodes[filePath] || '// Could not load code.';
     }
 
     initializeLogsPage() {
+        console.log('initializeLogsPage called');
         this.loadSystemLogs();
         this.initializeLogStatsChart();
     }
@@ -953,11 +1004,6 @@ class ModelTrainer:
                         y: {
                             beginAtZero: true
                         }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
                     }
                 }
             });
@@ -965,12 +1011,13 @@ class ModelTrainer:
     }
 
     initializeSettingsPage() {
+        console.log('initializeSettingsPage called');
         this.loadCurrentSettings();
         this.setupSettingsEvents();
     }
 
     loadCurrentSettings() {
-        // 설정 로드 로직
+        // Settings load logic
         const updateInterval = localStorage.getItem('updateInterval') || '5';
         const theme = localStorage.getItem('theme') || 'light';
         const autoRefresh = localStorage.getItem('autoRefresh') !== 'false';
@@ -981,7 +1028,7 @@ class ModelTrainer:
     }
 
     setupSettingsEvents() {
-        // 설정 이벤트 리스너 설정
+        // Set up settings event listeners
         const saveBtn = document.querySelector('.btn-primary');
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.saveSettings());
@@ -997,13 +1044,13 @@ class ModelTrainer:
         localStorage.setItem('theme', theme);
         localStorage.setItem('autoRefresh', autoRefresh);
         
-        // 설정 적용
+        // Apply settings
         if (window.dashboard) {
             window.dashboard.updateInterval = parseInt(updateInterval) * 1000;
         }
         
-        // 성공 메시지 표시
-        this.showAlert('설정이 저장되었습니다.', 'success');
+        // Display success message
+        this.showAlert('Settings saved.', 'success');
     }
 
     showAlert(message, type = 'info') {
@@ -1021,13 +1068,13 @@ class ModelTrainer:
         }
     }
 
-    // 유틸리티 메서드들
+    // Utility methods
     generateTimeLabels(count) {
         const labels = [];
         const now = new Date();
         for (let i = count - 1; i >= 0; i--) {
             const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-            labels.push(time.toLocaleTimeString('ko-KR', { 
+            labels.push(time.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
             }));
@@ -1035,22 +1082,57 @@ class ModelTrainer:
         return labels;
     }
 
-    generateMockPriceData(count, offset = 0) {
+    generateMockPriceData(count, stockSymbol = 'AAPL', offset = 0) {
         const data = [];
-        let basePrice = 150 + offset;
+        // Different base prices for different stocks
+        const stockBasePrices = {
+            'AAPL': 180,
+            'MSFT': 380,
+            'GOOGL': 140,
+            'AMZN': 150,
+            'TSLA': 250,
+            'NVDA': 450,
+            'META': 320,
+            'NFLX': 420,
+            'JPM': 145,
+            'UNH': 520
+        };
+        
+        let basePrice = (stockBasePrices[stockSymbol] || 150) + offset;
         for (let i = 0; i < count; i++) {
-            basePrice += (Math.random() - 0.5) * 5;
-            data.push(Math.max(100, basePrice));
+            basePrice += (Math.random() - 0.5) * (basePrice * 0.03); // 3% volatility
+            data.push(Math.max(50, basePrice));
         }
         return data;
     }
+    
+    setupPredictionStockSelector() {
+        const selector = document.getElementById('prediction-stock-selector');
+        if (selector) {
+            selector.addEventListener('change', (event) => {
+                const selectedStock = event.target.value;
+                const selectedText = event.target.options[event.target.selectedIndex].text;
+                console.log(`Prediction chart stock changed to: ${selectedStock}`);
+                
+                // Update chart
+                this.initializePredictionChart(selectedStock);
+                
+                // Update description
+                const description = document.getElementById('prediction-chart-description');
+                if (description) {
+                    description.textContent = `Currently displaying real-time price prediction chart for ${selectedText}. The blue solid line represents the actual price, and the red dashed line represents the AI model's predicted price.`;
+                }
+            });
+        }
+    }
 
     initializeXAIPage() {
+        console.log('initializeXAIPage called');
         if (window.dashboard && window.dashboard.extensions) {
             window.dashboard.extensions.loadXAIData();
         }
     }
 }
 
-// 글로벌 라우터 인스턴스 생성
+// Create global router instance
 window.router = new Router();

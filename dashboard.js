@@ -1,9 +1,9 @@
-// 확장된 대시보드 메인 JavaScript 파일
+// Extended Dashboard Main JavaScript File
 class DashboardManager {
     constructor() {
         this.charts = {};
-        this.updateInterval = 5000; // 5초마다 업데이트
-        this.newsUpdateInterval = 30000; // 30초마다 뉴스 업데이트
+        this.updateInterval = 5000; // Update every 5 seconds
+        this.newsUpdateInterval = 30000; // Update news every 30 seconds
         this.dataEndpoints = {
             systemStatus: '../data/raw/system_status.json',
             realtimeResults: '../data/raw/realtime_results.json',
@@ -24,14 +24,17 @@ class DashboardManager {
         this.loadInitialData();
         this.setupEventListeners();
         
-        // 확장 기능 초기화
-        if (typeof DashboardExtensions !== 'undefined') {
-            this.initExtensions();
-        }
-        this.updateAPIStatusDisplay(); // API 상태 표시 추가
+        // Initialize extended features
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof DashboardExtensions !== 'undefined') {
+                this.extensions = new DashboardExtensions(this);
+                this.extensions.init();
+            }
+        });
+        this.updateAPIStatusDisplay(); // Add API status display
     }
 
-    // 차트 공통 설정 (라벨 가독성 개선)
+    // Common chart settings (improved label readability)
     getCommonChartOptions(chartType = 'line') {
         const baseOptions = {
             responsive: true,
@@ -98,16 +101,20 @@ class DashboardManager {
         return baseOptions;
     }
 
-    // API 상태 표시 업데이트
+    // Update API status display
     updateAPIStatusDisplay() {
+        if (!window.sp500APIManager) {
+            console.warn('sp500APIManager not yet initialized.');
+            return;
+        }
         const apiStatus = window.sp500APIManager.getAPIStatus();
         const container = document.getElementById('api-status-container');
         if (!container) {
-            console.warn('API 상태를 표시할 HTML 요소 #api-status-container를 찾을 수 없습니다.');
+            console.warn('Could not find HTML element #api-status-container to display API status.');
             return;
         }
 
-        let html = '<h3>API 활성화 상태</h3><div class="api-status-grid">';
+        let html = '<h3>API Status</h3><div class="api-status-grid">';
         for (const apiName in apiStatus) {
             const status = apiStatus[apiName];
             let statusClass = '';
@@ -115,23 +122,23 @@ class DashboardManager {
             switch (status) {
                 case 'active':
                     statusClass = 'status-dot online';
-                    statusText = '활성';
+                    statusText = 'Active';
                     break;
                 case 'error':
                     statusClass = 'status-dot offline';
-                    statusText = '오류';
+                    statusText = 'Error';
                     break;
                 case 'no_key':
                     statusClass = 'status-dot warning';
-                    statusText = '키 없음';
+                    statusText = 'No Key';
                     break;
                 case 'demo_key':
                     statusClass = 'status-dot warning';
-                    statusText = '데모 키';
+                    statusText = 'Demo Key';
                     break;
                 default:
                     statusClass = 'status-dot unknown';
-                    statusText = '알 수 없음';
+                    statusText = 'Unknown';
             }
             html += `
                 <div class="api-status-item">
@@ -145,7 +152,7 @@ class DashboardManager {
         container.innerHTML = html;
     }
 
-    // 초기 데이터 로드
+    // Initial data load
     async loadInitialData() {
         try {
             await this.updateSystemStatus();
@@ -153,34 +160,34 @@ class DashboardManager {
             await this.updateSystemLogs();
             this.updateLastUpdateTime();
         } catch (error) {
-            console.error('초기 데이터 로드 실패:', error);
+            console.error('Initial data load failed:', error);
             this.showErrorState();
         }
     }
 
-    // 시스템 상태 업데이트
+    // Update system status
     async updateSystemStatus() {
         try {
-            // 실제 파일에서 데이터 로드 시도
+            // Attempt to load data from actual file
             const response = await fetch(this.dataEndpoints.systemStatus);
             let data;
             
             if (response.ok) {
                 data = await response.json();
             } else {
-                // 파일이 없으면 모의 데이터 사용
+                // Use mock data if file not found
                 data = this.generateMockSystemStatus();
             }
 
             this.updateSystemMetrics(data);
         } catch (error) {
-            console.warn('시스템 상태 파일 로드 실패, 모의 데이터 사용:', error);
+            console.warn('Failed to load system status file, using mock data:', error);
             const mockData = this.generateMockSystemStatus();
             this.updateSystemMetrics(mockData);
         }
     }
 
-    // 시스템 메트릭 업데이트
+    // Update system metrics
     updateSystemMetrics(data) {
         document.getElementById('model-accuracy').textContent = 
             data.model_accuracy ? `${data.model_accuracy}%` : `${(85 + Math.random() * 10).toFixed(1)}%`;
@@ -194,7 +201,7 @@ class DashboardManager {
         document.getElementById('data-sources').textContent = 
             data.data_sources || Math.floor(5 + Math.random() * 3);
 
-        // 시스템 상태 표시
+        // Display system status
         const statusElement = document.getElementById('system-status');
         if (data.status === 'online' || !data.status) {
             statusElement.className = 'status-dot online';
@@ -203,7 +210,7 @@ class DashboardManager {
         }
     }
 
-    // 실시간 예측 결과 업데이트
+    // Update real-time prediction results
     async updateRealtimePredictions() {
         try {
             const response = await fetch(this.dataEndpoints.realtimeResults);
@@ -217,13 +224,13 @@ class DashboardManager {
 
             this.updatePredictionsDisplay(data);
         } catch (error) {
-            console.warn('실시간 결과 파일 로드 실패, 모의 데이터 사용:', error);
+            console.warn('Failed to load real-time results file, using mock data:', error);
             const mockData = this.generateMockPredictions();
             this.updatePredictionsDisplay(mockData);
         }
     }
 
-    // 예측 결과 표시 업데이트
+    // Update prediction results display
     updatePredictionsDisplay(data) {
         const container = document.querySelector('.predictions-container');
         
@@ -232,19 +239,21 @@ class DashboardManager {
                 <div class="prediction-item">
                     <span class="stock-symbol">${pred.symbol}</span>
                     <span class="prediction-direction ${pred.direction}">${pred.change}</span>
-                    <span class="confidence">신뢰도: ${pred.confidence}%</span>
+                    <span class="confidence">Confidence: ${pred.confidence}%</span>
                 </div>
             `).join('');
         }
     }
 
-    // 시스템 로그 업데이트
+    // Update system logs
     async updateSystemLogs() {
         try {
-            // 실제 로그 파일 읽기 시도
-            const logFiles = ['../data/raw/realtime_testing.log', '../data/raw/system_orchestrator.log'];
+            // Attempt to load log files. If not found, mock data will be used.
+            const logFiles = [
+                '/dashboard/log/localhost-1753240572250.log'
+            ];
             let logs = [];
-            
+
             for (const logFile of logFiles) {
                 try {
                     const response = await fetch(logFile);
@@ -252,40 +261,49 @@ class DashboardManager {
                         const text = await response.text();
                         const parsedLogs = this.parseLogFile(text);
                         logs = logs.concat(parsedLogs);
+                    } else {
+                        console.info(`Log file ${logFile} not found or failed to load (${response.status} ${response.statusText}). Using mock data.`);
                     }
                 } catch (error) {
-                    console.log(`로그 파일 ${logFile} 로드 실패`);
+                    console.info(`Error loading log file ${logFile}:`, error, `. Using mock data.`);
                 }
             }
-            
+
             if (logs.length === 0) {
                 logs = this.generateMockLogs();
             }
-            
-            this.displayLogs(logs.slice(0, 20)); // 최근 20개만 표시
+
+            this.displayLogs(logs.slice(0, 20)); // Display only the latest 20
         } catch (error) {
-            console.warn('로그 로드 실패, 모의 데이터 사용:', error);
+            console.error('Log load failed (final):', error);
             this.displayLogs(this.generateMockLogs());
         }
     }
 
-    // 로그 파일 파싱
+    // Parse log file
     parseLogFile(logText) {
         const lines = logText.split('\n').filter(line => line.trim());
         return lines.slice(-10).map((line, index) => {
-            const timestamp = new Date().toLocaleTimeString('ko-KR');
+            const timestamp = new Date().toLocaleTimeString('en-US'); // Use current time as timestamp is not in log file
             let level = 'INFO';
             let message = line;
             
+            // Parse log level (e.g., ERROR, WARNING, INFO)
             if (line.toLowerCase().includes('error')) level = 'ERROR';
             else if (line.toLowerCase().includes('warning')) level = 'WARNING';
             else if (line.toLowerCase().includes('success')) level = 'SUCCESS';
+            else if (line.toLowerCase().includes('info')) level = 'INFO';
+            else if (line.toLowerCase().includes('debug')) level = 'DEBUG';
             
+            // Remove level information from message (optional)
+            const levelRegex = new RegExp(`(ERROR|WARNING|INFO|SUCCESS|DEBUG)`, 'i');
+            message = message.replace(levelRegex, '').trim();
+
             return { timestamp, level, message: message.substring(0, 100) };
         });
     }
 
-    // 로그 표시
+    // Display logs
     displayLogs(logs) {
         const container = document.getElementById('system-logs');
         container.innerHTML = logs.map(log => `
@@ -297,14 +315,14 @@ class DashboardManager {
         `).join('');
     }
 
-    // 차트 설정
+    // Chart setup
     setupCharts() {
         this.setupPerformanceChart();
         this.setupVolumeChart();
         this.setupModelComparisonChart();
     }
 
-    // 성능 추이 차트
+    // Performance trend chart
     setupPerformanceChart() {
         const ctx = document.getElementById('performance-chart').getContext('2d');
         this.charts.performance = new Chart(ctx, {
@@ -312,7 +330,7 @@ class DashboardManager {
             data: {
                 labels: this.generateTimeLabels(24),
                 datasets: [{
-                    label: '모델 정확도',
+                    label: 'Model Accuracy',
                     data: this.generatePerformanceData(24),
                     borderColor: '#667eea',
                     backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -348,7 +366,7 @@ class DashboardManager {
         });
     }
 
-    // 거래량 차트
+    // Trading volume chart
     setupVolumeChart() {
         const ctx = document.getElementById('volume-chart').getContext('2d');
         const volumeData = {
@@ -361,7 +379,7 @@ class DashboardManager {
             data: {
                 labels: volumeData.labels,
                 datasets: [{
-                    label: '거래량 (백만)',
+                    label: 'Volume (Millions)',
                     data: volumeData.data,
                     backgroundColor: [
                         'rgba(102, 126, 234, 0.8)',
@@ -398,22 +416,22 @@ class DashboardManager {
             }
         });
 
-        // 거래량 데이터를 기반으로 XAI 선택 메뉴를 업데이트합니다.
+        // Updates XAI selection menu based on volume data.
         this.updateXaiStockSelector(volumeData);
         
-        // 거래량 분석 정보 업데이트
+        // Update volume analysis information
         this.updateVolumeAnalysis(volumeData);
     }
 
     /**
-     * 거래량 데이터를 기반으로 XAI 주식 선택 드롭다운 메뉴를 업데이트합니다.
-     * @param {object} volumeData - 거래량 차트 데이터 ({labels: string[], data: number[]})
+     * Updates the XAI stock selection dropdown menu based on volume data.
+     * @param {object} volumeData - Volume chart data ({labels: string[], data: number[]})
      */
     updateXaiStockSelector(volumeData) {
         const xaiStockSelector = document.getElementById('xai-stock-selector');
         if (!xaiStockSelector) return;
 
-        // 거래량을 기준으로 상위 5개 종목을 선택합니다.
+        // Select top 5 stocks based on volume.
         const top5Stocks = volumeData.labels
             .map((label, index) => ({ symbol: label, volume: volumeData.data[index] }))
             .sort((a, b) => b.volume - a.volume)
@@ -423,14 +441,14 @@ class DashboardManager {
             .map(stock => `<option value="${stock.symbol}">${stock.symbol}</option>`)
             .join('');
 
-        // 드롭다운이 변경되었으므로, 첫 번째 항목에 대한 분석을 다시 렌더링합니다.
+        // Since the dropdown has changed, re-render the analysis for the first item.
         if (top5Stocks.length > 0) {
             this.handleXaiStockChange(top5Stocks[0].symbol);
         }
     }
 
     /**
-     * 거래량 분석 정보를 업데이트합니다.
+     * Updates volume analysis information.
      * @param {object} volumeData - 거래량 데이터
      */
     updateVolumeAnalysis(volumeData) {
@@ -439,23 +457,23 @@ class DashboardManager {
         const maxVolume = Math.max(...volumeData.data);
         const maxVolumeStock = volumeData.labels[volumeData.data.indexOf(maxVolume)];
         
-        // 이상 거래량 감지 (평균의 1.5배 이상)
+        // Unusual volume detected (over 1.5x average)
         const abnormalVolumes = volumeData.data.filter(vol => vol > avgVolume * 1.5);
         
-        // HTML 업데이트
+        // Update HTML
         document.getElementById('total-volume').textContent = totalVolume.toFixed(1) + 'M';
         document.getElementById('avg-volume').textContent = avgVolume.toFixed(1) + 'M';
         document.getElementById('max-volume').textContent = `${maxVolumeStock} (${maxVolume}M)`;
-        document.getElementById('volume-alerts').textContent = abnormalVolumes.length + '건';
+        document.getElementById('volume-alerts').textContent = abnormalVolumes.length + ' cases';
     }
 
-    // 모델 비교 차트
+    // Model comparison chart
     setupModelComparisonChart() {
         const ctx = document.getElementById('model-comparison-chart').getContext('2d');
         this.charts.modelComparison = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['정확도', '속도', '안정성', '확장성', '효율성'],
+                labels: ['Accuracy', 'Speed', 'Stability', 'Scalability', 'Efficiency'],
                 datasets: [{
                     label: 'Random Forest',
                     data: [85, 90, 80, 75, 85],
@@ -497,7 +515,7 @@ class DashboardManager {
         });
     }
 
-    // 실시간 업데이트 시작
+    // Start real-time updates
     startRealTimeUpdates() {
         setInterval(async () => {
             await this.updateSystemStatus();
@@ -505,16 +523,16 @@ class DashboardManager {
             this.updateCharts();
             this.updateLastUpdateTime();
             
-            // 가끔 로그도 업데이트
+            // Also update logs occasionally
             if (Math.random() > 0.7) {
                 await this.updateSystemLogs();
             }
         }, this.updateInterval);
     }
 
-    // 차트 데이터 업데이트
+    // Update chart data
     updateCharts() {
-        // 성능 차트 업데이트
+        // Update performance chart
         if (this.charts.performance) {
             const newData = 85 + Math.random() * 10;
             this.charts.performance.data.datasets[0].data.push(newData);
@@ -522,7 +540,7 @@ class DashboardManager {
             this.charts.performance.update('none');
         }
         
-        // 거래량 차트 업데이트 (가끔)
+        // Update volume chart (occasionally)
         if (this.charts.volume && Math.random() > 0.8) {
             this.charts.volume.data.datasets[0].data = 
                 this.charts.volume.data.datasets[0].data.map(val => 
@@ -532,13 +550,13 @@ class DashboardManager {
         }
     }
 
-    // 시간 라벨 생성
+    // Generate time labels
     generateTimeLabels(hours) {
         const labels = [];
         const now = new Date();
         for (let i = hours; i >= 0; i--) {
             const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-            labels.push(time.toLocaleTimeString('ko-KR', { 
+            labels.push(time.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
             }));
@@ -546,7 +564,7 @@ class DashboardManager {
         return labels;
     }
 
-    // 성능 데이터 생성
+    // Generate performance data
     generatePerformanceData(points) {
         const data = [];
         let baseAccuracy = 87;
@@ -558,16 +576,16 @@ class DashboardManager {
         return data;
     }
 
-    // 마지막 업데이트 시간 표시
+    // Display last update time
     updateLastUpdateTime() {
         const now = new Date();
-        const timeString = now.toLocaleString('ko-KR');
-        document.getElementById('last-update').textContent = `마지막 업데이트: ${timeString}`;
+        const timeString = now.toLocaleString('en-US');
+        document.getElementById('last-update').textContent = `Last Updated: ${timeString}`;
     }
 
-    // 이벤트 리스너 설정
+    // Set up event listeners
     setupEventListeners() {
-        // 위젯 클릭 시 상세 정보 표시
+        // Display detailed information when widget is clicked
         document.querySelectorAll('.widget').forEach(widget => {
             widget.addEventListener('click', (e) => {
                 if (!e.target.closest('canvas')) {
@@ -576,18 +594,20 @@ class DashboardManager {
             });
         });
 
-        // 새로고침 버튼 (헤더 클릭)
+        // Refresh button (header click)
         document.querySelector('.content-header h1').addEventListener('click', () => {
             this.refreshAllData();
         });
 
-        // 뉴스 업데이트 이벤트 리스너
+        // News update event listener
         window.addEventListener('newsUpdate', (event) => {
-            this.extensions.updateLlmAnalysisSummary();
+            if (this.extensions && typeof this.extensions.updateLlmAnalysisSummary === 'function') {
+                this.extensions.updateLlmAnalysisSummary();
+            }
         });
 
-        // 모바일 메뉴 토글 버튼 이벤트 리스너
-        // 모바일 뷰에서 사이드바를 열고 닫는 기능을 제어합니다.
+        // Mobile menu toggle button event listener
+        // Controls the function to open and close the sidebar in mobile view.
         const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
@@ -613,7 +633,7 @@ class DashboardManager {
                 }
             });
 
-            // 사이드바 메뉴 항목 클릭 시 사이드바 닫기 (모바일 환경에서만 작동)
+            // Close sidebar when a sidebar menu item is clicked (only works in mobile environment)
             sidebar.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', () => {
                     if (window.innerWidth <= 768) {
@@ -622,63 +642,63 @@ class DashboardManager {
                 });
             });
 
-            // 메인 콘텐츠 클릭 시 사이드바 닫기
+            // Close sidebar when main content is clicked
             mainContent.addEventListener('click', () => {
                 if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
                     closeSidebar();
                 }
             });
 
-            // 사이드바에서 스와이프하여 닫기
+            // Close sidebar by swiping from sidebar
             sidebar.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
             });
 
             sidebar.addEventListener('touchend', (e) => {
                 const touchEndX = e.changedTouches[0].clientX;
-                if (touchStartX - touchEndX > 50) { // 왼쪽으로 50px 이상 스와이프
+                if (touchStartX - touchEndX > 50) { // Swipe more than 50px to the left
                     closeSidebar();
                 }
             });
         }
 
-        // XAI 페이지 주식 선택 이벤트 리스너
+        // XAI page stock selection event listener
         const xaiStockSelector = document.getElementById('xai-stock-selector');
         if (xaiStockSelector) {
             xaiStockSelector.addEventListener('change', (event) => {
                 this.handleXaiStockChange(event.target.value);
             });
-            // 초기 로드 시 기본값으로 데이터 로드
+            // Load data with default value on initial load
             this.handleXaiStockChange(xaiStockSelector.value);
         }
 
-        // 동적 콘텐츠에 대한 이벤트 리스너 위임 (로그 및 뉴스)
+        // Delegate event listeners for dynamic content (logs and news)
         document.querySelector('.page-content').addEventListener('click', (event) => {
             const logEntry = event.target.closest('.log-entry');
             const newsItem = event.target.closest('.news-item');
 
             if (logEntry) {
-                // 시스템 로그 항목 클릭 시 로그 페이지로 이동
+                // Navigate to logs page when system log item is clicked
                 this.navigateToPage('logs');
             }
 
             if (newsItem) {
-                // 뉴스 항목 클릭 시 뉴스 분석 페이지로 이동
+                // Navigate to news analysis page when news item is clicked
                 this.navigateToPage('news');
             }
         });
     }
 
     /**
-     * 특정 페이지로 이동하고 해당 메뉴를 활성화하는 헬퍼 함수
-     * @param {string} pageId - 이동할 페이지의 ID (예: 'logs', 'news')
+     * Helper function to navigate to a specific page and activate its menu
+     * @param {string} pageId - ID of the page to navigate to (e.g., 'logs', 'news')
      */
     navigateToPage(pageId) {
-        // 모든 페이지 숨기기 및 활성 클래스 제거
+        // Hide all pages and remove active class
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
-        // 대상 페이지 및 링크 활성화
+        // Activate target page and link
         document.getElementById(`page-${pageId}`).classList.add('active');
         const navLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
         if (navLink) {
@@ -687,41 +707,41 @@ class DashboardManager {
         }
     }
 
-    // XAI 주식 변경 처리
+    // Handle XAI stock change
     handleXaiStockChange(stockSymbol) {
-        console.log(`XAI 분석을 위해 선택된 주식: ${stockSymbol}`);
+        console.log(`Selected stock for XAI analysis: ${stockSymbol}`);
         if (this.extensions && typeof this.extensions.renderLocalXaiAnalysis === 'function') {
             this.extensions.renderLocalXaiAnalysis(stockSymbol);
         } else {
-            console.error('renderLocalXaiAnalysis 함수를 찾을 수 없습니다.');
+            console.warn('DashboardExtensions instance not found or renderLocalXaiAnalysis function not found.');
         }
     }
 
-    // 위젯 상세 정보 표시
+    // Display widget details
     showWidgetDetails(widget) {
-        // 클릭 메시지 제거 - 아무 동작하지 않음
+        // Remove click message - no action
         return;
     }
 
-    // 모든 데이터 새로고침
+    // Refresh all data
     async refreshAllData() {
         await this.loadInitialData();
         this.updateCharts();
     }
 
-    // 에러 상태 표시
+    // Display error state
     showErrorState() {
         document.getElementById('system-status').className = 'status-dot offline';
-        document.getElementById('last-update').textContent = '업데이트 실패';
+        document.getElementById('last-update').textContent = 'Update Failed';
         
-        // 기본 메트릭 표시
+        // Display default metrics
         document.getElementById('model-accuracy').textContent = '--';
         document.getElementById('processing-speed').textContent = '--';
         document.getElementById('active-models').textContent = '--';
         document.getElementById('data-sources').textContent = '--';
     }
 
-    // 모의 데이터 생성 함수들
+    // Mock data generation functions
     generateMockSystemStatus() {
         return {
             model_accuracy: (85 + Math.random() * 10).toFixed(1),
@@ -752,14 +772,14 @@ class DashboardManager {
 
     generateMockLogs() {
         const messages = [
-            '모델 훈련 완료 - 정확도: 89.3%',
-            '데이터 수집 파이프라인 정상 작동',
-            'API 응답 지연 감지: 평균 1.2초',
-            '새로운 뉴스 데이터 200건 수집',
-            '모델 예측 정확도 향상: +2.1%',
-            '시스템 백업 완료',
-            '실시간 데이터 처리 중',
-            '특성 엔지니어링 완료'
+            'Model training completed - Accuracy: 89.3%',
+            'Data collection pipeline operating normally',
+            'API response delay detected: average 1.2 seconds',
+            'Collected 200 new news data',
+            'Model prediction accuracy improved: +2.1%',
+            'System backup completed',
+            'Real-time data processing',
+            'Feature engineering completed'
         ];
         
         const levels = ['INFO', 'SUCCESS', 'WARNING', 'INFO'];
@@ -800,13 +820,13 @@ class RealTimeConnection {
             this.ws = new WebSocket('ws://localhost:8080/dashboard');
             this.setupWebSocketHandlers();
         } catch (error) {
-            console.log('WebSocket 서버 연결 실패, 폴링 모드로 동작');
+            console.log('WebSocket server connection failed, operating in polling mode');
         }
     }
 
     setupWebSocketHandlers() {
         this.ws.onopen = () => {
-            console.log('실시간 연결 성공');
+            console.log('Real-time connection successful');
             this.reconnectAttempts = 0;
         };
 
@@ -820,7 +840,7 @@ class RealTimeConnection {
         };
 
         this.ws.onerror = (error) => {
-            console.error('WebSocket 에러:', error);
+            console.error('WebSocket Error:', error);
         };
     }
 

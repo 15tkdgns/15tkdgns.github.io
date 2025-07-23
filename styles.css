@@ -1,4 +1,4 @@
-/* 기본 스타일 리셋 */
+/* Basic style reset */
 * {
     margin: 0;
     padding: 0;
@@ -32,6 +32,75 @@ body {
     min-height: 100vh;
     color: #333;
     /* overflow-x: hidden; */ /* 왼쪽 잘림 문제 해결을 위해 제거 */
+}
+
+/* Translation Button Styles */
+.translate-container {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-translate {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-translate:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 140px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+    margin-top: 5px;
+}
+
+.language-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    padding: 8px 16px;
+    color: #333;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.language-option:last-child {
+    border-bottom: none;
+}
+
+.language-option:hover {
+    background: #f8f9ff;
+    color: #5a67d8;
+}
+
+.language-option:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.language-option:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 /* Progress Page Styles */
@@ -276,6 +345,22 @@ canvas {
     height: auto !important;
 }
 
+/* Prediction Chart Specific Styles */
+#prediction-chart {
+    max-width: 100%;
+    max-height: 400px;
+    width: 100% !important;
+    height: 400px !important;
+}
+
+.large-widget .chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 420px;
+    padding: 10px;
+    overflow: hidden;
+}
+
 /* 반응형 차트 컨테이너 */
 @media (max-width: 768px) {
     .chart-wrapper {
@@ -285,6 +370,14 @@ canvas {
     canvas {
         max-height: 250px !important;
         max-width: calc(100% - 20px) !important;
+    }
+    
+    #prediction-chart {
+        height: 300px !important;
+    }
+    
+    .large-widget .chart-wrapper {
+        height: 320px;
     }
 }
 
@@ -2505,9 +2598,9 @@ img, video {
 .mobile-menu-toggle {
     display: none; /* 기본적으로 숨김 */
     position: fixed;
-    top: 15px;
+    top: 15px; /* 원래 위치로 복원 */
     left: 15px;
-    z-index: 1001; /* 사이드바보다 위에 표시 */
+    z-index: 1001; /* 원래 z-index로 복원 */
     background: rgba(255, 255, 255, 0.9);
     border: none;
     padding: 10px 12px;
@@ -2525,7 +2618,7 @@ img, video {
     }
 
     .mobile-menu-toggle {
-        display: block; /* 모바일에서만 표시 */
+        display: block; /* 모바일에서 표시 */
     }
 
     .sidebar {
