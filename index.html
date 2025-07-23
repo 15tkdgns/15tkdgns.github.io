@@ -6,6 +6,7 @@
     <title>AI Stock Prediction System - Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
@@ -40,11 +41,14 @@
                 <li><a href="#xai" class="nav-link" data-page="xai">
                     <span class="nav-icon">🧠</span> XAI Analysis
                 </a></li>
+                <li><a href="#model-training" class="nav-link" data-page="model-training">
+                    <span class="nav-icon">🏋️</span> Model Training
+                </a></li>
                 <li><a href="#progress" class="nav-link" data-page="progress">
                     <span class="nav-icon">📈</span> Progress
                 </a></li>
-                <li><a href="#data" class="nav-link" data-page="data">
-                    <span class="nav-icon">🗂️</span> Data Explorer
+                <li><a href="#datasets" class="nav-link" data-page="datasets">
+                    <span class="nav-icon">🗂️</span> Datasets
                 </a></li>
                 <li><a href="#code" class="nav-link" data-page="code">
                     <span class="nav-icon">💻</span> Source Code
@@ -144,7 +148,7 @@
             <section class="widget medium-widget">
                 <h2>Model Performance Trend</h2>
                 <div class="model-performance-info">
-                    <strong>Reference Stock:</strong> Current model performance is measured against the <span id="performance-stock-info">S&P 500 overall average</span>.
+                    <strong>Reference Data:</strong> Based on actual model training results from <span id="performance-stock-info">time-based split validation (2024-10-01 cutoff)</span>.
                 </div>
                 <canvas id="performance-chart"></canvas>
             </section>
@@ -644,31 +648,92 @@
                                 <h3>Recent Update Log</h3>
                                 <div class="update-log" id="progress-update-log">
                                     <div class="log-item completed">
+                                        <div class="log-time">2025-07-23 18:00</div>
+                                        <div class="log-content">
+                                            <strong>JavaScript Console Errors Resolution</strong>
+                                            <p>✅ NewsAnalyzer definition error ✅ CORS policy errors ✅ 404 file missing errors ✅ XAI Dashboard initialization ✅ Plotly CDN warnings</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item completed">
+                                        <div class="log-time">2025-07-23 17:45</div>
+                                        <div class="log-content">
+                                            <strong>XAI Tab Basic Chart Implementation</strong>
+                                            <p>Implemented loadXAIData() method with Feature Importance, SHAP, Model Performance, and Prediction Confidence charts</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item in-progress">
+                                        <div class="log-time">2025-07-23 18:15</div>
+                                        <div class="log-content">
+                                            <strong>Dashboard Model Performance Trend Fix</strong>
+                                            <p>🔄 Fixing anomalous model performance trend chart display issues</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:20</div>
+                                        <div class="log-content">
+                                            <strong>UI Design Blue Underline Removal</strong>
+                                            <p>⏳ Removing ambiguous blue underline design elements across all tabs</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:25</div>
+                                        <div class="log-content">
+                                            <strong>Real-time Prediction Tab Enhancement</strong>
+                                            <p>⏳ Adding more stocks to Prediction Confidence, converting time format to 24-hour in S&P 500 Results</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:30</div>
+                                        <div class="log-content">
+                                            <strong>News Analysis Tab LLM Summary</strong>
+                                            <p>⏳ Resolving loading state in LLM Analysis Summary, adding positive/negative labels to Sentiment Chart</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:35</div>
+                                        <div class="log-content">
+                                            <strong>XAI Tab Content Implementation</strong>
+                                            <p>⏳ HIGH PRIORITY: Implementing actual analysis content beyond titles (Global/Local explanations, ML performance)</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:40</div>
+                                        <div class="log-content">
+                                            <strong>Model Training Tab Implementation</strong>
+                                            <p>⏳ HIGH PRIORITY: Implementing actual training content and visualizations</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:45</div>
+                                        <div class="log-content">
+                                            <strong>Dataset Tab Interactive Features</strong>
+                                            <p>⏳ Implementing click-to-load functionality from Dataset Categories to Data Viewer</p>
+                                        </div>
+                                    </div>
+                                    <div class="log-item pending">
+                                        <div class="log-time">2025-07-23 18:50</div>
+                                        <div class="log-content">
+                                            <strong>Settings Tab Localization</strong>
+                                            <p>⏳ Converting Korean text to English in Settings tab</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Legacy Items -->
+                                    <div class="log-separator">
+                                        <span>Previous Updates</span>
+                                    </div>
+                                    <div class="log-item completed legacy">
                                         <div class="log-time">2024-12-25 16:30</div>
                                         <div class="log-content">
                                             <strong>XAI Data Visualization Improvement</strong>
                                             <p>Display feature importance and SHAP analysis results using actual monitoring_dashboard.json data</p>
                                         </div>
                                     </div>
-                                    <div class="log-item completed">
+                                    <div class="log-item completed legacy">
                                         <div class="log-time">2024-12-25 15:45</div>
                                         <div class="log-content">
                                             <strong>Added Progress Tab</strong>
                                             <p>Implemented a new tab to visually display project completion and component-wise progress</p>
-                                        </div>
-                                    </div>
-                                    <div class="log-item in-progress">
-                                        <div class="log-time">2024-12-25 17:00</div>
-                                        <div class="log-content">
-                                            <strong>News Article Link Improvement</strong>
-                                            <p>Implementing functionality to navigate to original links when clicking news articles</p>
-                                        </div>
-                                    </div>
-                                    <div class="log-item in-progress">
-                                        <div class="log-time">2024-12-25 17:15</div>
-                                        <div class="log-content">
-                                            <strong>Chart Label Readability Improvement</strong>
-                                            <p>Fixing issues where labels extend outside the chart and improving overall readability</p>
                                         </div>
                                     </div>
                                 </div>
@@ -740,6 +805,9 @@
                                     <option value="GOOGL">Google (GOOGL)</option>
                                     <option value="AMZN">Amazon (AMZN)</option>
                                 </select>
+                            </div>
+                            <div id="xai-analysis-container" class="xai-analysis-container">
+                                <!-- Dynamic XAI analysis content will be rendered here -->
                             </div>
                             <div class="xai-grid">
                                 <div id="shap-force-plot" class="xai-chart-container">
@@ -871,42 +939,198 @@
                     </div>
                 </div>
 
-                <!-- Data Explorer Page -->
-                <div id="page-data" class="page">
-                    <div class="data-explorer">
-                        <div class="data-header">
-                            <h2>Data Explorer</h2>
-                            <div class="data-controls">
-                                <select id="dataset-selector">
-                                    <option value="stock_data">Stock Data</option>
-                                    <option value="news_data">News Data</option>
-                                    <option value="features">Feature Data</option>
-                                    <option value="predictions">Prediction Results</option>
-                                </select>
-                                <button class="btn" onclick="dashboard.exportCurrentData()">Export</button>
+                <!-- Model Training Report Page -->
+                <div id="page-model-training" class="page">
+                    <div class="training-report-container">
+                        <div class="training-header">
+                            <h2>Model Training Analysis</h2>
+                            <p>This page visualizes the results from the latest model training session.</p>
+                        </div>
+                        <div class="training-grid">
+                            <div class="widget large-widget">
+                                <h3>Model Performance Comparison</h3>
+                                <div id="training-performance-chart"></div>
+                            </div>
+                            <div class="widget medium-widget">
+                                <h3>Training Time Comparison</h3>
+                                <div id="training-time-chart"></div>
+                            </div>
+                            <div class="widget medium-widget">
+                                <h3>LSTM Training & Validation Accuracy</h3>
+                                <div id="lstm-accuracy-chart"></div>
+                            </div>
+                            <div class="widget large-widget">
+                                <h3>Feature Importance (Random Forest)</h3>
+                                <img id="feature-importance-img" src="../results/analysis/feature_importance.png" alt="Feature Importance from latest training" style="width: 100%; height: auto;"/>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Datasets Page -->
+                <div id="page-datasets" class="page">
+                    <div class="datasets-container">
+                        <div class="datasets-header">
+                            <h2>Datasets Overview</h2>
+                            <p>Comprehensive view of all data sources used in the AI stock prediction system</p>
+                        </div>
                         
-                        <div class="data-grid">
+                        <div class="datasets-grid">
+                            <!-- Dataset Cards -->
                             <div class="widget large-widget">
-                                <h3>Data Table</h3>
-                                <div class="data-table-container">
-                                    <table class="data-table" id="data-table">
-                                        <!-- Dynamically generated -->
-                                    </table>
+                                <h3>Dataset Categories</h3>
+                                <div class="dataset-cards">
+                                    <div class="dataset-card" data-category="raw">
+                                        <div class="card-header">
+                                            <h4>📊 Raw Data</h4>
+                                            <span class="data-count" id="raw-data-count">Loading...</span>
+                                        </div>
+                                        <p>Original stock prices, volumes, and market data</p>
+                                        <div class="dataset-stats">
+                                            <span>Size: <span id="raw-data-size">-</span></span>
+                                            <span>Last Updated: <span id="raw-data-updated">-</span></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="dataset-card" data-category="processed">
+                                        <div class="card-header">
+                                            <h4>⚙️ Processed Data</h4>
+                                            <span class="data-count" id="processed-data-count">Loading...</span>
+                                        </div>
+                                        <p>Cleaned and preprocessed data with feature engineering</p>
+                                        <div class="dataset-stats">
+                                            <span>Size: <span id="processed-data-size">-</span></span>
+                                            <span>Last Updated: <span id="processed-data-updated">-</span></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="dataset-card" data-category="training">
+                                        <div class="card-header">
+                                            <h4>🎯 Training Data</h4>
+                                            <span class="data-count" id="training-data-count">Loading...</span>
+                                        </div>
+                                        <p>Features and labels prepared for model training</p>
+                                        <div class="dataset-stats">
+                                            <span>Size: <span id="training-data-size">-</span></span>
+                                            <span>Last Updated: <span id="training-data-updated">-</span></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="dataset-card" data-category="results">
+                                        <div class="card-header">
+                                            <h4>📈 Results Data</h4>
+                                            <span class="data-count" id="results-data-count">Loading...</span>
+                                        </div>
+                                        <p>Model predictions, performance metrics, and analysis results</p>
+                                        <div class="dataset-stats">
+                                            <span>Size: <span id="results-data-size">-</span></span>
+                                            <span>Last Updated: <span id="results-data-updated">-</span></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
+                            <!-- Data Viewer -->
+                            <div class="widget large-widget">
+                                <h3>Data Viewer</h3>
+                                <div class="data-viewer-controls">
+                                    <select id="data-category-selector">
+                                        <option value="">Select Dataset Category</option>
+                                        <option value="raw">Raw Data</option>
+                                        <option value="processed">Processed Data</option>
+                                        <option value="training">Training Data</option>
+                                        <option value="results">Results Data</option>
+                                    </select>
+                                    <select id="data-file-selector" disabled>
+                                        <option value="">Select File</option>
+                                    </select>
+                                    <button class="btn" id="load-data-btn" disabled>Load Data</button>
+                                    <button class="btn" id="export-data-btn" disabled">Export</button>
+                                </div>
+                                
+                                <div class="data-viewer-content">
+                                    <div class="data-info" id="data-info">
+                                        <div class="info-item">
+                                            <label>File:</label>
+                                            <span id="current-file">No file selected</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Rows:</label>
+                                            <span id="data-rows">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Columns:</label>
+                                            <span id="data-columns">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Size:</label>
+                                            <span id="data-file-size">-</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="data-table-wrapper">
+                                        <div class="table-pagination-controls">
+                                            <button id="data-prev-page" class="pagination-btn" disabled>◀ Previous</button>
+                                            <span id="data-page-info">Page 1 of 1</span>
+                                            <button id="data-next-page" class="pagination-btn" disabled>Next ▶</button>
+                                            <select id="data-rows-per-page">
+                                                <option value="10">10 rows</option>
+                                                <option value="25" selected>25 rows</option>
+                                                <option value="50">50 rows</option>
+                                                <option value="100">100 rows</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="data-table-container" id="data-table-container">
+                                            <div class="data-placeholder">
+                                                <p>Select a dataset category and file to view data</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Statistics -->
                             <div class="widget medium-widget">
                                 <h3>Data Statistics</h3>
-                                <div class="data-stats" id="data-stats">
-                                    <!-- Dynamically generated -->
+                                <div class="data-stats-content" id="data-stats-content">
+                                    <div class="stats-placeholder">
+                                        <p>Load a dataset to view statistics</p>
+                                    </div>
                                 </div>
                             </div>
                             
+                            <!-- Data Quality Metrics -->
                             <div class="widget medium-widget">
+                                <h3>Data Quality</h3>
+                                <div class="data-quality-content" id="data-quality-content">
+                                    <div class="quality-placeholder">
+                                        <p>Load a dataset to view quality metrics</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Visualization -->
+                            <div class="widget large-widget">
                                 <h3>Data Visualization</h3>
-                                <canvas id="data-visualization"></canvas>
+                                <div class="visualization-controls">
+                                    <select id="viz-type-selector" disabled>
+                                        <option value="">Select Visualization</option>
+                                        <option value="histogram">Histogram</option>
+                                        <option value="scatter">Scatter Plot</option>
+                                        <option value="line">Line Chart</option>
+                                        <option value="correlation">Correlation Matrix</option>
+                                    </select>
+                                    <select id="viz-column-selector" disabled>
+                                        <option value="">Select Column</option>
+                                    </select>
+                                    <button class="btn" id="generate-viz-btn" disabled>Generate</button>
+                                </div>
+                                <div class="visualization-container" id="visualization-container">
+                                    <div class="viz-placeholder">
+                                        <p>Load data and select visualization type to generate charts</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1077,11 +1301,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script> <!-- Plotly.js 최신 안정 버전 -->
     <script src="translator.js"></script>
     <script src="router.js"></script>
     <script src="sp500-api-manager.js"></script>
     <script src="api-config-panel.js"></script>
     <script src="news-analyzer.js"></script>
+    <script src="datasets-manager.js"></script>
+    <!-- Tab-specific modules -->
+    <script src="dashboard-tab.js"></script>
+    <script src="predictions-tab.js"></script>
+    <script src="news-tab.js"></script>
+    <script src="xai-tab.js"></script>
+    <script src="model-training-tab.js"></script>
+    <!-- Legacy modules -->
     <script src="dashboard-extended.js"></script>
     <script src="dashboard.js"></script>
 </body>

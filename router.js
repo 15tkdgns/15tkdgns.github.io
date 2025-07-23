@@ -3,6 +3,7 @@ class Router {
     constructor() {
         this.routes = {};
         this.currentPage = 'dashboard';
+        this.tabInstances = {};
         this.init();
     }
 
@@ -102,22 +103,23 @@ class Router {
         return hash || null;
     }
 
-    initializePage(page) {
+    async initializePage(page) {
         console.log(`Initializing page: ${page}`);
         switch(page) {
             case 'dashboard':
-                if (window.dashboard) {
-                    window.dashboard.refreshAllData();
-                }
+                await this.initializeDashboardPage();
                 break;
             case 'models':
                 this.initializeModelsPage();
                 break;
+            case 'model-training':
+                await this.initializeModelTrainingPage();
+                break;
             case 'predictions':
-                this.initializePredictionsPage();
+                await this.initializePredictionsPage();
                 break;
             case 'news':
-                this.initializeNewsPage();
+                await this.initializeNewsPage();
                 break;
             case 'data':
                 this.initializeDataPage();
@@ -132,9 +134,47 @@ class Router {
                 this.initializeSettingsPage();
                 break;
             case 'xai':
-                this.initializeXAIPage();
+                await this.initializeXAIPage();
+                break;
+            case 'progress':
+                this.initializeProgressPage();
+                break;
+            case 'datasets':
+                this.initializeDatasetsPage();
                 break;
         }
+    }
+
+    async initializeDashboardPage() {
+        console.log('[ROUTER] Initializing dashboard page with modular approach');
+        if (!this.tabInstances.dashboard) {
+            if (window.DashboardTab) {
+                this.tabInstances.dashboard = new window.DashboardTab();
+            } else {
+                console.warn('[ROUTER] DashboardTab class not available, falling back to legacy dashboard');
+                if (window.dashboard) {
+                    window.dashboard.refreshAllData();
+                }
+                return;
+            }
+        }
+        await this.tabInstances.dashboard.init();
+    }
+
+    async initializeModelTrainingPage() {
+        console.log('[ROUTER] Initializing model training page with modular approach');
+        if (!this.tabInstances.modelTraining) {
+            if (window.ModelTrainingTab) {
+                this.tabInstances.modelTraining = new window.ModelTrainingTab();
+                // Store global reference for button functions
+                window.modelTrainingTab = this.tabInstances.modelTraining;
+            } else {
+                console.warn('[ROUTER] ModelTrainingTab class not available, falling back to legacy');
+                this.initializeModelsPage(); // Use existing legacy function as fallback
+                return;
+            }
+        }
+        await this.tabInstances.modelTraining.init();
     }
 
     initializeModelsPage() {
@@ -247,8 +287,24 @@ class Router {
         }
     }
 
-    initializePredictionsPage() {
-        console.log('initializePredictionsPage called');
+    async initializePredictionsPage() {
+        console.log('[ROUTER] Initializing predictions page with modular approach');
+        if (!this.tabInstances.predictions) {
+            if (window.PredictionsTab) {
+                this.tabInstances.predictions = new window.PredictionsTab();
+                // Store global reference for pagination functions
+                window.predictionsTab = this.tabInstances.predictions;
+            } else {
+                console.warn('[ROUTER] PredictionsTab class not available, falling back to legacy');
+                this.initializePredictionsPageLegacy();
+                return;
+            }
+        }
+        await this.tabInstances.predictions.init();
+    }
+
+    initializePredictionsPageLegacy() {
+        console.log('initializePredictionsPage called (legacy)');
         // Initialize prediction chart
         this.initializePredictionChart();
         
@@ -390,7 +446,21 @@ class Router {
     }
 
     async initializeNewsPage() {
-        console.log('initializeNewsPage called');
+        console.log('[ROUTER] Initializing news page with modular approach');
+        if (!this.tabInstances.news) {
+            if (window.NewsTab) {
+                this.tabInstances.news = new window.NewsTab();
+            } else {
+                console.warn('[ROUTER] NewsTab class not available, falling back to legacy');
+                this.initializeNewsPageLegacy();
+                return;
+            }
+        }
+        await this.tabInstances.news.init();
+    }
+
+    async initializeNewsPageLegacy() {
+        console.log('initializeNewsPage called (legacy)');
         // Use real-time news analyzer
         if (window.newsAnalyzer) {
             // Load real-time news
@@ -1126,8 +1196,22 @@ class ModelTrainer:
         }
     }
 
-    initializeXAIPage() {
-        console.log('[XAI DEBUG] initializeXAIPage called');
+    async initializeXAIPage() {
+        console.log('[ROUTER] Initializing XAI page with modular approach');
+        if (!this.tabInstances.xai) {
+            if (window.XAITab) {
+                this.tabInstances.xai = new window.XAITab();
+            } else {
+                console.warn('[ROUTER] XAITab class not available, falling back to legacy');
+                this.initializeXAIPageLegacy();
+                return;
+            }
+        }
+        await this.tabInstances.xai.init();
+    }
+
+    initializeXAIPageLegacy() {
+        console.log('[XAI DEBUG] initializeXAIPage called (legacy)');
         console.log('[XAI DEBUG] window.dashboard:', window.dashboard);
         console.log('[XAI DEBUG] window.dashboard.extensions:', window.dashboard ? window.dashboard.extensions : 'dashboard not available');
         
@@ -1136,7 +1220,8 @@ class ModelTrainer:
             if (window.dashboard && window.dashboard.extensions) {
                 console.log('[XAI DEBUG] Dashboard and extensions available, calling loadXAIData');
                 // Ensure XAI data is loaded and charts are rendered
-                window.dashboard.extensions.loadXAIData().then(() => {
+                try {
+                    window.dashboard.extensions.loadXAIData();
                     console.log('[XAI DEBUG] XAI data loading completed');
                     
                     // Setup refresh button event listener
@@ -1147,11 +1232,11 @@ class ModelTrainer:
                         console.log('[XAI DEBUG] Triggering initial XAI stock analysis for NVDA');
                         window.dashboard.handleXaiStockChange('NVDA');
                     }
-                }).catch(error => {
+                } catch (error) {
                     console.error('[XAI DEBUG] Error loading XAI data:', error);
                     // Show mock data instead
                     this.showXAIFallback();
-                });
+                }
             } else {
                 console.error('[XAI DEBUG] Dashboard or extensions not available after waiting');
                 this.showXAIFallback();
@@ -1168,8 +1253,8 @@ class ModelTrainer:
                 attempts++;
                 console.log(`[XAI DEBUG] Checking dashboard availability (attempt ${attempts}/${maxAttempts})`);
                 
-                if (window.dashboard && window.dashboard.extensions) {
-                    console.log('[XAI DEBUG] Dashboard found and ready');
+                if (window.dashboard) {
+                    console.log('[XAI DEBUG] Dashboard found and ready (extensions may be null)');
                     resolve();
                 } else if (attempts >= maxAttempts) {
                     console.error('[XAI DEBUG] Dashboard not available after maximum attempts');

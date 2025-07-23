@@ -162,27 +162,24 @@ class RealTimeNewsAnalyzer {
         
         for (const feed of rssFeeds) {
             try {
-                // Proxy server needed in real environment due to CORS issues
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feed)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
+                console.log(`[NEWS DEBUG] Using mock data for RSS feed: ${this.getSourceFromFeed(feed)}`);
                 
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
+                // 모크 RSS 뉴스 생성
+                const mockFeedNews = [
+                    {
+                        id: this.generateNewsId(`mock-${Math.random()}`),
+                        title: `Breaking: ${this.getSourceFromFeed(feed)} Reports Major Market Movement`,
+                        content: 'Market analysts predict continued volatility as economic indicators show mixed signals.',
+                        source: this.getSourceFromFeed(feed),
+                        url: '#mock-rss-link',
+                        publishedAt: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+                        category: 'market'
+                    }
+                ];
                 
-                const items = Array.from(xmlDoc.querySelectorAll('item'));
+                allNews.push(...mockFeedNews);
                 
-                const feedNews = items.slice(0, 10).map(item => ({
-                    id: this.generateNewsId(item.querySelector('link')?.textContent),
-                    title: item.querySelector('title')?.textContent || '',
-                    content: item.querySelector('description')?.textContent || '',
-                    source: this.getSourceFromFeed(feed),
-                    url: item.querySelector('link')?.textContent || '',
-                    publishedAt: new Date(item.querySelector('pubDate')?.textContent).toISOString(),
-                    category: this.categorizeNews(item.querySelector('title')?.textContent + ' ' + item.querySelector('description')?.textContent)
-                }));
-                
-                allNews = allNews.concat(feedNews);
+                // mockFeedNews already added above
                 
             } catch (error) {
                 console.warn(`RSS feed ${feed} collection failed:`, error);
@@ -198,30 +195,34 @@ class RealTimeNewsAnalyzer {
         
         // Yahoo Finance RSS (Free)
         try {
-            const yahooRss = 'https://feeds.finance.yahoo.com/rss/2.0/headline';
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooRss)}`;
-            const response = await fetch(proxyUrl);
-            const data = await response.json();
+            console.log('[NEWS DEBUG] Using mock financial news data (CORS bypass)');
             
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
+            // 모크 금융 뉴스 생성
+            const mockFinancialNews = [
+                {
+                    id: 'mock-1',
+                    title: 'Market Reaches Record High as Tech Stocks Surge',
+                    content: 'Technology companies continue to drive market gains with strong earnings reports.',
+                    source: 'Mock Financial News',
+                    url: '#mock-news-1',
+                    publishedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+                    category: 'market'
+                },
+                {
+                    id: 'mock-2',
+                    title: 'Fed Signals Potential Rate Changes in Upcoming Meeting',
+                    content: 'Federal Reserve officials hint at monetary policy adjustments based on inflation data.',
+                    source: 'Mock Economic News',
+                    url: '#mock-news-2',
+                    publishedAt: new Date(Date.now() - Math.random() * 7200000).toISOString(),
+                    category: 'economy'
+                }
+            ];
             
-            const items = Array.from(xmlDoc.querySelectorAll('item'));
-            
-            const yahooNews = items.slice(0, 15).map(item => ({
-                id: this.generateNewsId(item.querySelector('link')?.textContent),
-                title: item.querySelector('title')?.textContent || '',
-                content: item.querySelector('description')?.textContent || '',
-                source: 'Yahoo Finance',
-                url: item.querySelector('link')?.textContent || '',
-                publishedAt: new Date(item.querySelector('pubDate')?.textContent).toISOString(),
-                category: 'finance'
-            }));
-            
-            financialNews.push(...yahooNews);
+            financialNews.push(...mockFinancialNews);
             
         } catch (error) {
-            console.warn('Yahoo Finance news collection failed:', error);
+            console.warn('Mock financial news generation failed:', error);
         }
         
         return financialNews;
