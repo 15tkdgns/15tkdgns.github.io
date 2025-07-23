@@ -150,7 +150,7 @@ class SimpleTranslator {
         const dropdown = document.getElementById('language-dropdown');
         const languageOptions = document.querySelectorAll('.language-option');
         
-        if (translateBtn && dropdown) {
+        if (translateBtn && dropdown && languageOptions.length > 0) {
             translateBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.toggle('show');
@@ -165,10 +165,14 @@ class SimpleTranslator {
             languageOptions.forEach(option => {
                 option.addEventListener('click', (e) => {
                     const lang = e.target.getAttribute('data-lang');
-                    this.setLanguage(lang);
-                    dropdown.classList.remove('show');
+                    if (lang) {
+                        this.setLanguage(lang);
+                        dropdown.classList.remove('show');
+                    }
                 });
             });
+        } else {
+            console.warn('Translation elements not found. Translation functionality disabled.');
         }
         
     }
@@ -205,13 +209,20 @@ class SimpleTranslator {
             'de': 'DE'
         };
         
-        document.getElementById('translate-btn').innerHTML = `<span>🌐</span> ${langNames[lang]}`;
+        const translateBtn = document.getElementById('translate-btn');
+        if (translateBtn) {
+            translateBtn.innerHTML = `<span>🌐</span> ${langNames[lang]}`;
+        }
         
         // Translate all elements
         this.translatePage();
         
         // Save preference
-        localStorage.setItem('preferredLanguage', lang);
+        try {
+            localStorage.setItem('preferredLanguage', lang);
+        } catch (e) {
+            console.warn('Unable to save language preference:', e);
+        }
     }
     
     translatePage() {
@@ -261,18 +272,28 @@ class SimpleTranslator {
     
     // Load saved language preference
     loadSavedLanguage() {
-        const saved = localStorage.getItem('preferredLanguage');
-        if (saved && this.translations[saved]) {
-            this.setLanguage(saved);
+        try {
+            const saved = localStorage.getItem('preferredLanguage');
+            if (saved && this.translations[saved]) {
+                this.setLanguage(saved);
+            }
+        } catch (e) {
+            console.warn('Unable to load saved language preference:', e);
         }
     }
 }
 
 // Initialize translator when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.translator = new SimpleTranslator();
-    // Load saved language after a short delay to ensure all elements are rendered
-    setTimeout(() => {
-        window.translator.loadSavedLanguage();
-    }, 100);
+    try {
+        window.translator = new SimpleTranslator();
+        // Load saved language after a short delay to ensure all elements are rendered
+        setTimeout(() => {
+            if (window.translator && typeof window.translator.loadSavedLanguage === 'function') {
+                window.translator.loadSavedLanguage();
+            }
+        }, 500); // Increased delay to ensure all elements are loaded
+    } catch (error) {
+        console.error('Failed to initialize translator:', error);
+    }
 });

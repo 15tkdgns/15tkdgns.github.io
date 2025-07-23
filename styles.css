@@ -340,9 +340,15 @@ canvas {
 /* 차트 컨테이너 강제 크기 제한 */
 .widget canvas {
     max-width: calc(100% - 40px) !important;
-    max-height: 350px !important;
+    max-height: 400px !important;
     width: auto !important;
     height: auto !important;
+}
+
+/* Performance chart 특별 처리 */
+#performance-chart {
+    max-height: 300px !important;
+    margin-top: 10px;
 }
 
 /* Prediction Chart Specific Styles */
@@ -1661,7 +1667,18 @@ canvas {
 }
 
 .widget:has(> canvas) {
-    height: 400px;
+    min-height: 400px;
+    height: auto;
+}
+
+/* Model Performance 특별 스타일 */
+.model-performance-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #666;
 }
 
 .widget:hover {
@@ -1690,9 +1707,20 @@ canvas {
 /* 대시보드 그리드: 위젯들을 배치하는 그리드 레이아웃 */
 .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 최소 300px, 최대 1fr로 자동 조정 */
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); /* 모바일에서 화면 너비를 초과하지 않도록 수정 */
     gap: 25px;
     align-items: start;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 모바일 우선 미디어 쿼리 추가 */
+@media (max-width: 350px) {
+    .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
+        grid-template-columns: 1fr !important; /* 매우 작은 화면에서는 강제로 1열 */
+        gap: 15px;
+    }
 }
 
 .large-widget {
@@ -2617,6 +2645,10 @@ img, video {
         --sidebar-width: 280px; /* 모바일에서 사이드바 너비 고정 */
     }
 
+    body {
+        overflow-x: hidden; /* 모바일에서 가로 스크롤 방지 */
+    }
+
     .mobile-menu-toggle {
         display: block; /* 모바일에서 표시 */
     }
@@ -2633,19 +2665,30 @@ img, video {
         transform: translateX(0); /* 'open' 클래스가 추가되면 화면 안으로 들어옴 */
     }
 
+    .dashboard-container {
+        width: 100vw;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     .main-content {
         margin-left: 0; /* 기본 마진 제거 */
         transition: margin-left 0.3s ease;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
     .main-content.shifted {
-        margin-left: var(--sidebar-width); /* 사이드바가 열리면 메인 콘텐츠를 오른쪽으로 밀어냄 */
+        margin-left: 0; /* 모바일에서는 마진 대신 overlay 방식 사용 */
     }
 
     .content-header {
         left: 0; /* 기본 위치 */
         width: 100%; /* 기본 너비 */
+        max-width: 100vw;
         padding: 10px 15px;
+        box-sizing: border-box;
     }
 
     .content-header h1 {
@@ -2655,6 +2698,10 @@ img, video {
     .page-content {
         padding: 20px 15px; /* 모바일 환경에 맞는 패딩 */
         padding-top: 80px; /* 고정 헤더를 위한 상단 패딩 */
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
     .large-widget {
@@ -2663,19 +2710,33 @@ img, video {
 
     .dashboard-grid, .models-grid, .predictions-grid, .news-grid, .data-grid, .logs-grid, .settings-grid {
         grid-template-columns: 1fr; /* 모든 그리드를 1열로 변경 */
+        gap: 15px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .widget {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        margin-bottom: 15px;
     }
 
     .header-actions {
         gap: 5px;
+        flex-wrap: wrap;
     }
 
     .btn {
         padding: 6px 10px;
         font-size: 0.8rem;
+        white-space: nowrap;
     }
 
     .system-metrics {
         grid-template-columns: repeat(2, 1fr); /* 모바일에서는 2열로 표시 */
+        gap: 10px;
     }
 
     .metric-value {
@@ -2684,6 +2745,20 @@ img, video {
 
     .model-comparison-table {
         overflow-x: auto; /* 작은 화면에서 테이블 내용이 잘리지 않도록 가로 스크롤 추가 */
+        width: 100%;
+    }
+
+    /* 테이블 스타일 개선 */
+    table {
+        width: 100%;
+        min-width: 400px; /* 최소 너비 설정 */
+    }
+
+    /* 차트 컨테이너 모바일 최적화 */
+    .chart-wrapper {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
     }
 }
 
@@ -2693,14 +2768,51 @@ img, video {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        padding: 10px;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .page-content {
-        padding-top: 120px; /* 헤더 높이가 늘어났으므로 패딩 조정 */
+        padding: 10px; /* 더 작은 패딩 */
+        padding-top: 140px; /* 헤더 높이가 늘어났으므로 패딩 조정 */
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .widget {
+        padding: 15px; /* 더 작은 패딩 */
+        margin-bottom: 10px;
     }
 
     .system-metrics {
         grid-template-columns: 1fr; /* 가장 작은 화면에서는 1열로 표시 */
+        gap: 8px;
+    }
+
+    .btn {
+        padding: 8px;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+
+    /* 번역 컨테이너 모바일 최적화 */
+    .translate-container {
+        display: inline-block;
+        width: auto;
+    }
+
+    .language-dropdown {
+        right: 0;
+        min-width: 120px;
     }
 }
 

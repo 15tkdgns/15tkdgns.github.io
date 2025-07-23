@@ -713,7 +713,8 @@ class DashboardManager {
         if (this.extensions && typeof this.extensions.renderLocalXaiAnalysis === 'function') {
             this.extensions.renderLocalXaiAnalysis(stockSymbol);
         } else {
-            console.warn('DashboardExtensions instance not found or renderLocalXaiAnalysis function not found.');
+            // This is expected behavior when XAI extensions are not loaded
+            console.debug('XAI extensions not available for stock:', stockSymbol);
         }
     }
 
