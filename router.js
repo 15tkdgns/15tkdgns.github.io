@@ -11,14 +11,18 @@ class Router {
         // Page title mapping
         this.pageTitles = {
             'dashboard': 'Dashboard',
+            'overview': 'System Overview',
             'models': 'Model Performance',
             'predictions': 'Real-time Predictions',
             'news': 'News Analysis',
             'data': 'Data Explorer',
+            'datasets': 'Datasets',
             'code': 'Source Code',
             'logs': 'System Logs',
             'settings': 'Settings',
-            'xai': 'XAI Analysis'
+            'xai': 'XAI Analysis',
+            'model-training': 'Model Training',
+            'progress': 'Progress'
         };
 
         // Set up navigation click events
@@ -109,6 +113,9 @@ class Router {
             case 'dashboard':
                 await this.initializeDashboardPage();
                 break;
+            case 'overview':
+                this.initializeOverviewPage();
+                break;
             case 'models':
                 this.initializeModelsPage();
                 break;
@@ -137,10 +144,12 @@ class Router {
                 await this.initializeXAIPage();
                 break;
             case 'progress':
-                this.initializeProgressPage();
+                console.log('[ROUTER] 🚀 Progress case triggered!');
+                await this.initializeProgressPage();
+                console.log('[ROUTER] 🚀 Progress page initialization completed!');
                 break;
             case 'datasets':
-                this.initializeDatasetsPage();
+                await this.initializeDatasetsPage();
                 break;
         }
     }
@@ -159,6 +168,31 @@ class Router {
             }
         }
         await this.tabInstances.dashboard.init();
+    }
+
+    initializeOverviewPage() {
+        console.log('[ROUTER] Initializing system overview page');
+        
+        // System Overview는 정적 콘텐츠이므로 특별한 초기화가 필요하지 않음
+        // 모든 데이터는 HTML에 하드코딩되어 있음
+        
+        // 애니메이션 효과 추가
+        const overviewPage = document.getElementById('page-overview');
+        if (overviewPage) {
+            const widgets = overviewPage.querySelectorAll('.widget');
+            widgets.forEach((widget, index) => {
+                widget.style.opacity = '0';
+                widget.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    widget.style.transition = 'all 0.5s ease';
+                    widget.style.opacity = '1';
+                    widget.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+        
+        console.log('[ROUTER] System overview page initialized with animation effects');
     }
 
     async initializeModelTrainingPage() {
@@ -982,7 +1016,7 @@ class DashboardManager {
     
     // Chart setup
     setupCharts() {
-        this.setupPerformanceChart();
+        // performance chart is now handled by dashboard-tab.js
         this.setupVolumeChart();
     }
 }`,
@@ -1338,6 +1372,107 @@ class ModelTrainer:
                 container.innerHTML = '<div class="xai-error"><p>XAI system not initialized. Check console for details.</p></div>';
             }
         });
+    }
+
+    // Initialize Progress page
+    async initializeProgressPage() {
+        console.log('[ROUTER] Initializing progress page with modular approach');
+        console.log('[ROUTER] window.ProgressTab available:', !!window.ProgressTab);
+        console.log('[ROUTER] this.tabInstances.progress exists:', !!this.tabInstances.progress);
+        
+        if (!this.tabInstances.progress) {
+            if (window.ProgressTab) {
+                console.log('[ROUTER] Creating new ProgressTab instance');
+                this.tabInstances.progress = new window.ProgressTab();
+                window.progressTab = this.tabInstances.progress; // Global reference for tab switching
+                console.log('[ROUTER] ProgressTab instance created successfully');
+            } else {
+                console.error('[ROUTER] ProgressTab class not available, falling back to legacy');
+                console.error('[ROUTER] Available window properties:', Object.keys(window).filter(key => key.includes('Tab')));
+                this.initializeProgressPageLegacy();
+                return;
+            }
+        }
+        
+        try {
+            console.log('[ROUTER] Calling progress init()');
+            await this.tabInstances.progress.init();
+            console.log('[ROUTER] Progress page initialized successfully');
+        } catch (error) {
+            console.error('[ROUTER] Error initializing progress page:', error);
+            this.initializeProgressPageLegacy();
+        }
+    }
+
+    initializeProgressPageLegacy() {
+        console.log('initializeProgressPage called (legacy)');
+        const container = document.getElementById('page-progress');
+        if (container) {
+            const legacyWidget = document.createElement('div');
+            legacyWidget.className = 'widget large-widget';
+            legacyWidget.style.background = '#f44336';
+            legacyWidget.style.color = 'white';
+            legacyWidget.innerHTML = `
+                <h2>⚠️ LEGACY MODE ⚠️</h2>
+                <div class="progress-placeholder">
+                    <p>ProgressTab class not loaded. Using legacy mode.</p>
+                    <p>Time: ${new Date().toLocaleTimeString()}</p>
+                </div>
+            `;
+            // Find progress-grid or append to container directly
+            const progressGrid = container.querySelector('.progress-grid');
+            if (progressGrid) {
+                progressGrid.appendChild(legacyWidget);
+            } else {
+                container.appendChild(legacyWidget);
+            }
+            console.log('[ROUTER] Added legacy mode widget');
+        }
+    }
+
+    // Initialize Datasets page
+    async initializeDatasetsPage() {
+        console.log('[ROUTER] Initializing datasets page with modular approach');
+        console.log('[ROUTER] window.DatasetsTab available:', !!window.DatasetsTab);
+        console.log('[ROUTER] this.tabInstances.datasets exists:', !!this.tabInstances.datasets);
+        
+        if (!this.tabInstances.datasets) {
+            if (window.DatasetsTab) {
+                console.log('[ROUTER] Creating new DatasetsTab instance');
+                this.tabInstances.datasets = new window.DatasetsTab();
+                window.datasetsTab = this.tabInstances.datasets; // Global reference for button actions
+                console.log('[ROUTER] DatasetsTab instance created successfully');
+            } else {
+                console.error('[ROUTER] DatasetsTab class not available, falling back to legacy');
+                console.error('[ROUTER] Available window properties:', Object.keys(window).filter(key => key.includes('Tab')));
+                this.initializeDatasetsPageLegacy();
+                return;
+            }
+        }
+        
+        try {
+            console.log('[ROUTER] Calling datasets init()');
+            await this.tabInstances.datasets.init();
+            console.log('[ROUTER] Datasets page initialized successfully');
+        } catch (error) {
+            console.error('[ROUTER] Error initializing datasets page:', error);
+            this.initializeDatasetsPageLegacy();
+        }
+    }
+
+    initializeDatasetsPageLegacy() {
+        console.log('initializeDatasetsPage called (legacy)');
+        const container = document.getElementById('page-datasets');
+        if (container) {
+            container.innerHTML = `
+                <div class="datasets-content">
+                    <h2>Dataset Management</h2>
+                    <div class="datasets-placeholder">
+                        <p>DatasetsTab class not loaded. Please check the script inclusion.</p>
+                    </div>
+                </div>
+            `;
+        }
     }
 }
 

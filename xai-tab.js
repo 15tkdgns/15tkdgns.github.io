@@ -28,7 +28,7 @@ class XAITab {
 
     async loadMonitoringData() {
         try {
-            const response = await fetch('/data/raw/monitoring_dashboard.json');
+            const response = await fetch('../data/raw/monitoring_dashboard.json');
             if (response.ok) {
                 this.monitoringData = await response.json();
                 console.log('[XAI TAB] Monitoring data loaded successfully');

@@ -24,6 +24,15 @@ class DashboardTab {
         const ctx = document.getElementById('performance-chart');
         if (!ctx) return;
 
+        // Only create chart if dashboard page is active
+        const dashboardPage = document.getElementById('page-dashboard');
+        if (!dashboardPage || !dashboardPage.classList.contains('active')) return;
+
+        // Destroy existing chart if it exists
+        if (this.charts.performance) {
+            this.charts.performance.destroy();
+        }
+
         // Use actual model performance data
         const modelLabels = ['Random Forest', 'Gradient Boosting', 'XGBoost', 'LSTM'];
         const accuracyData = [100.0, 100.0, 99.6, 85.7]; // Based on actual training results

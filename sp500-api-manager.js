@@ -7,7 +7,7 @@ class SP500APIManager {
         this.updateInterval = 60000; // 1분마다 업데이트
         this.retryAttempts = 3;
         
-        // API 엔드포인트 설정
+        // API endpoint configuration
         this.apis = {
             // 1. Alpha Vantage (무료 + 유료)
             alphaVantage: {
@@ -116,7 +116,7 @@ class SP500APIManager {
         this.startDataCollection();
     }
 
-    // API 키 로드 및 설정
+    // Load and configure API keys
     loadAPIKeys() {
         // 로컬 스토리지에서 API 키 로드
         this.apiKeys = {
@@ -127,7 +127,7 @@ class SP500APIManager {
             iexCloud: localStorage.getItem('iex_key')
         };
         
-        // 각 API의 초기 상태 설정
+        // Set initial status for each API
         for (const apiName in this.apis) {
             if (this.apis[apiName].supported) {
                 if (apiName === 'yahooFinance') {
@@ -148,11 +148,11 @@ class SP500APIManager {
         }
     }
 
-    // API 키 설정
+    // Set API key
     setAPIKey(provider, key) {
         this.apiKeys[provider] = key;
         localStorage.setItem(`${provider}_key`, key);
-        console.log(`${provider} API 키가 설정되었습니다.`);
+        console.log(`${provider} API key has been configured.`);
     }
 
     // 데이터 수집 시작
