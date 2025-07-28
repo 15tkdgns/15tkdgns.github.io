@@ -99,9 +99,6 @@ class RealTimeNewsAnalyzer {
                 
                 console.log(`${this.newsCache.length} news articles collected and analyzed.`);
                 
-                // Update LLM analysis summary
-                this.updateLLMAnalysisSummary();
-                
                 // Trigger dashboard update event
                 this.notifyDashboard();
                 
@@ -165,24 +162,27 @@ class RealTimeNewsAnalyzer {
         
         for (const feed of rssFeeds) {
             try {
-                console.log(`[NEWS DEBUG] Using mock data for RSS feed: ${this.getSourceFromFeed(feed)}`);
+                // Proxy server needed in real environment due to CORS issues
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feed)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
                 
-                // 모크 RSS 뉴스 생성
-                const mockFeedNews = [
-                    {
-                        id: this.generateNewsId(`mock-${Math.random()}`),
-                        title: `Breaking: ${this.getSourceFromFeed(feed)} Reports Major Market Movement`,
-                        content: 'Market analysts predict continued volatility as economic indicators show mixed signals.',
-                        source: this.getSourceFromFeed(feed),
-                        url: '#mock-rss-link',
-                        publishedAt: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-                        category: 'market'
-                    }
-                ];
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
                 
-                allNews.push(...mockFeedNews);
+                const items = Array.from(xmlDoc.querySelectorAll('item'));
                 
-                // mockFeedNews already added above
+                const feedNews = items.slice(0, 10).map(item => ({
+                    id: this.generateNewsId(item.querySelector('link')?.textContent),
+                    title: item.querySelector('title')?.textContent || '',
+                    content: item.querySelector('description')?.textContent || '',
+                    source: this.getSourceFromFeed(feed),
+                    url: item.querySelector('link')?.textContent || '',
+                    publishedAt: new Date(item.querySelector('pubDate')?.textContent).toISOString(),
+                    category: this.categorizeNews(item.querySelector('title')?.textContent + ' ' + item.querySelector('description')?.textContent)
+                }));
+                
+                allNews = allNews.concat(feedNews);
                 
             } catch (error) {
                 console.warn(`RSS feed ${feed} collection failed:`, error);
@@ -198,34 +198,30 @@ class RealTimeNewsAnalyzer {
         
         // Yahoo Finance RSS (Free)
         try {
-            console.log('[NEWS DEBUG] Using mock financial news data (CORS bypass)');
+            const yahooRss = 'https://feeds.finance.yahoo.com/rss/2.0/headline';
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooRss)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
             
-            // 모크 금융 뉴스 생성
-            const mockFinancialNews = [
-                {
-                    id: 'mock-1',
-                    title: 'Market Reaches Record High as Tech Stocks Surge',
-                    content: 'Technology companies continue to drive market gains with strong earnings reports.',
-                    source: 'Mock Financial News',
-                    url: '#mock-news-1',
-                    publishedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-                    category: 'market'
-                },
-                {
-                    id: 'mock-2',
-                    title: 'Fed Signals Potential Rate Changes in Upcoming Meeting',
-                    content: 'Federal Reserve officials hint at monetary policy adjustments based on inflation data.',
-                    source: 'Mock Economic News',
-                    url: '#mock-news-2',
-                    publishedAt: new Date(Date.now() - Math.random() * 7200000).toISOString(),
-                    category: 'economy'
-                }
-            ];
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
             
-            financialNews.push(...mockFinancialNews);
+            const items = Array.from(xmlDoc.querySelectorAll('item'));
+            
+            const yahooNews = items.slice(0, 15).map(item => ({
+                id: this.generateNewsId(item.querySelector('link')?.textContent),
+                title: item.querySelector('title')?.textContent || '',
+                content: item.querySelector('description')?.textContent || '',
+                source: 'Yahoo Finance',
+                url: item.querySelector('link')?.textContent || '',
+                publishedAt: new Date(item.querySelector('pubDate')?.textContent).toISOString(),
+                category: 'finance'
+            }));
+            
+            financialNews.push(...yahooNews);
             
         } catch (error) {
-            console.warn('Mock financial news generation failed:', error);
+            console.warn('Yahoo Finance news collection failed:', error);
         }
         
         return financialNews;
@@ -238,7 +234,7 @@ class RealTimeNewsAnalyzer {
         for (const article of newsArticles) {
             try {
                 // Find LLM enhanced features
-                const llmFeature = this.llmFeatures && this.llmFeatures.find(
+                const llmFeature = this.llmFeatures.find(
                     (feature) => feature.title === article.title && feature.date === new Date(article.publishedAt).toISOString().split('T')[0]
                 );
 
@@ -645,128 +641,6 @@ class SentimentAnalyzer {
         else label = 'neutral';
         
         return { label, score, confidence };
-    }
-
-    // Update LLM Analysis Summary
-    updateLLMAnalysisSummary() {
-        if (!this.llmFeatures || this.llmFeatures.length === 0) {
-            // Use fallback analysis based on current news
-            this.updateLLMAnalysisFromNews();
-            return;
-        }
-
-        // Get recent LLM features (last 10 entries)
-        const recentFeatures = this.llmFeatures.slice(-10);
-        
-        // Calculate average sentiment
-        const avgSentiment = recentFeatures.reduce((sum, item) => 
-            sum + item.llm_sentiment_score, 0) / recentFeatures.length;
-        
-        // Determine market sentiment
-        let sentimentText, sentimentClass;
-        if (avgSentiment > 0.3) {
-            sentimentText = "📈 Bullish - Positive market sentiment detected from recent news analysis";
-            sentimentClass = "positive";
-        } else if (avgSentiment < -0.3) {
-            sentimentText = "📉 Bearish - Negative market sentiment detected from recent news analysis";
-            sentimentClass = "negative";
-        } else {
-            sentimentText = "➡️ Neutral - Mixed signals in market sentiment from recent analysis";
-            sentimentClass = "neutral";
-        }
-        
-        // Determine key event category
-        const categories = recentFeatures.map(item => item.event_category || 'market').filter(Boolean);
-        const categoryCount = {};
-        categories.forEach(cat => {
-            categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-        });
-        
-        const topCategory = Object.entries(categoryCount)
-            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'market';
-        
-        const categoryDescriptions = {
-            'market': '🏛️ Market Events - General market movements and trading activities',
-            'earnings': '💰 Earnings Reports - Company financial performance announcements',
-            'fed': '🏦 Federal Reserve - Monetary policy and interest rate decisions',
-            'geopolitical': '🌍 Geopolitical Events - International affairs affecting markets',
-            'economic': '📊 Economic Indicators - GDP, inflation, employment data releases',
-            'tech': '💻 Technology Sector - Tech company news and innovation updates'
-        };
-        
-        const eventCategoryText = categoryDescriptions[topCategory] || `📈 ${topCategory.charAt(0).toUpperCase() + topCategory.slice(1)} Events`;
-        
-        // Update UI elements
-        const sentimentElement = document.getElementById('llm-market-sentiment');
-        const categoryElement = document.getElementById('llm-event-category');
-        
-        if (sentimentElement) {
-            sentimentElement.innerHTML = sentimentText;
-            sentimentElement.className = `sentiment-analysis ${sentimentClass}`;
-        }
-        
-        if (categoryElement) {
-            categoryElement.innerHTML = eventCategoryText;
-        }
-    }
-
-    // Fallback LLM analysis based on current news
-    updateLLMAnalysisFromNews() {
-        if (!this.newsCache || this.newsCache.length === 0) {
-            return;
-        }
-
-        // Analyze sentiment from current news
-        const sentiments = this.newsCache.slice(0, 10).map(article => 
-            this.sentimentAnalyzer.analyze(article.title + ' ' + article.content));
-        
-        const avgSentiment = sentiments.reduce((sum, s) => sum + s.score, 0) / sentiments.length;
-        
-        let sentimentText, sentimentClass;
-        if (avgSentiment > 0.1) {
-            sentimentText = "📈 Bullish - Positive sentiment from recent news headlines";
-            sentimentClass = "positive";
-        } else if (avgSentiment < -0.1) {
-            sentimentText = "📉 Bearish - Negative sentiment from recent news headlines";
-            sentimentClass = "negative";
-        } else {
-            sentimentText = "➡️ Neutral - Mixed sentiment from recent news analysis";
-            sentimentClass = "neutral";
-        }
-        
-        // Analyze categories from news
-        const categories = this.newsCache.slice(0, 10).map(article => article.category || 'market');
-        const categoryCount = {};
-        categories.forEach(cat => {
-            categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-        });
-        
-        const topCategory = Object.entries(categoryCount)
-            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'market';
-        
-        const categoryDescriptions = {
-            'market': '🏛️ Market Events - General market movements and trading activities',
-            'economy': '📊 Economic News - GDP, inflation, and economic indicators',
-            'company': '🏢 Corporate News - Company earnings and business developments',
-            'crypto': '₿ Cryptocurrency - Digital asset and blockchain news',
-            'tech': '💻 Technology - Tech sector developments and innovation',
-            'energy': '⚡ Energy Sector - Oil, gas, and renewable energy news'
-        };
-        
-        const eventCategoryText = categoryDescriptions[topCategory] || `📈 ${topCategory.charAt(0).toUpperCase() + topCategory.slice(1)} News`;
-        
-        // Update UI elements
-        const sentimentElement = document.getElementById('llm-market-sentiment');
-        const categoryElement = document.getElementById('llm-event-category');
-        
-        if (sentimentElement) {
-            sentimentElement.innerHTML = sentimentText;
-            sentimentElement.className = `sentiment-analysis ${sentimentClass}`;
-        }
-        
-        if (categoryElement) {
-            categoryElement.innerHTML = eventCategoryText;
-        }
     }
 }
 

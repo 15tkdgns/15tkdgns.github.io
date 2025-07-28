@@ -7,7 +7,7 @@ class SP500APIManager {
         this.updateInterval = 60000; // 1분마다 업데이트
         this.retryAttempts = 3;
         
-        // API endpoint configuration
+        // API 엔드포인트 설정
         this.apis = {
             // 1. Alpha Vantage (무료 + 유료)
             alphaVantage: {
@@ -116,7 +116,7 @@ class SP500APIManager {
         this.startDataCollection();
     }
 
-    // Load and configure API keys
+    // API 키 로드 및 설정
     loadAPIKeys() {
         // 로컬 스토리지에서 API 키 로드
         this.apiKeys = {
@@ -127,7 +127,7 @@ class SP500APIManager {
             iexCloud: localStorage.getItem('iex_key')
         };
         
-        // Set initial status for each API
+        // 각 API의 초기 상태 설정
         for (const apiName in this.apis) {
             if (this.apis[apiName].supported) {
                 if (apiName === 'yahooFinance') {
@@ -148,11 +148,11 @@ class SP500APIManager {
         }
     }
 
-    // Set API key
+    // API 키 설정
     setAPIKey(provider, key) {
         this.apiKeys[provider] = key;
         localStorage.setItem(`${provider}_key`, key);
-        console.log(`${provider} API key has been configured.`);
+        console.log(`${provider} API 키가 설정되었습니다.`);
     }
 
     // 데이터 수집 시작
@@ -402,11 +402,26 @@ class SP500APIManager {
         
         try {
             for (const symbol of symbols) {
-                console.log(`[API DEBUG] Generating mock data for ${symbol} (CORS bypass)`);
+                const chartUrl = `${this.apis.yahooFinance.baseUrl}/${symbol}`;
+                const proxyUrl = `${this.apis.yahooFinance.proxyUrl}${encodeURIComponent(chartUrl)}`;
                 
-                // CORS 문제를 피하기 위해 모크 데이터 생성
-                const mockData = this.generateMockData(symbol);
-                let data = { contents: JSON.stringify(mockData) };
+                let data;
+                try {
+                    console.log(`[API DEBUG] Fetching data for ${symbol} via proxy...`);
+                    const response = await fetch(proxyUrl);
+                    
+                    if (!response.ok) {
+                        console.error(`[API DEBUG] HTTP ${response.status} for ${symbol}: ${response.statusText}`);
+                        continue;
+                    }
+                    
+                    data = await response.json();
+                    console.log(`[API DEBUG] Successfully fetched data for ${symbol}`);
+                } catch (fetchError) {
+                    console.error(`[API DEBUG] CORS/Network error for ${symbol}:`, fetchError.message);
+                    console.warn(`[API DEBUG] Skipping ${symbol} due to fetch error, will use mock data if needed`);
+                    continue;
+                }
                 
                 if (data.contents) {
                     const chartData = JSON.parse(data.contents);
@@ -488,47 +503,6 @@ class SP500APIManager {
         
         // 추가 분석 수행
         this.performMarketAnalysis(consolidatedData);
-    }
-
-    // 모크 데이터 생성 (CORS 우회용)
-    generateMockData(symbol) {
-        const basePrice = Math.random() * 200 + 50; // 50-250 범위의 기본 가격
-        const change = (Math.random() - 0.5) * 10; // -5 ~ +5 변동
-        const timestamps = [];
-        const prices = [];
-        
-        // 최근 30일간의 데이터 생성
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            timestamps.push(Math.floor(date.getTime() / 1000));
-            
-            const dailyChange = (Math.random() - 0.5) * 5;
-            prices.push(Math.max(10, basePrice + dailyChange + (Math.random() - 0.5) * 2));
-        }
-        
-        return {
-            chart: {
-                result: [{
-                    meta: {
-                        symbol: symbol,
-                        regularMarketPrice: basePrice + change,
-                        previousClose: basePrice,
-                        currency: 'USD'
-                    },
-                    timestamp: timestamps,
-                    indicators: {
-                        quote: [{
-                            open: prices.map(p => p + (Math.random() - 0.5) * 2),
-                            high: prices.map(p => p + Math.random() * 3),
-                            low: prices.map(p => p - Math.random() * 3),
-                            close: prices,
-                            volume: prices.map(() => Math.floor(Math.random() * 10000000))
-                        }]
-                    }
-                }]
-            }
-        };
     }
 
     // 여러 소스 데이터 통합

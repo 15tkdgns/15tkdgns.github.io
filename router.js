@@ -3,7 +3,6 @@ class Router {
     constructor() {
         this.routes = {};
         this.currentPage = 'dashboard';
-        this.tabInstances = {};
         this.init();
     }
 
@@ -11,18 +10,16 @@ class Router {
         // Page title mapping
         this.pageTitles = {
             'dashboard': 'Dashboard',
-            'overview': 'System Overview',
             'models': 'Model Performance',
             'predictions': 'Real-time Predictions',
             'news': 'News Analysis',
+            'xai': 'XAI Analysis',
+            'training': 'Training Pipeline',
+            'progress': 'Progress',
             'data': 'Data Explorer',
-            'datasets': 'Datasets',
             'code': 'Source Code',
             'logs': 'System Logs',
-            'settings': 'Settings',
-            'xai': 'XAI Analysis',
-            'model-training': 'Model Training',
-            'progress': 'Progress'
+            'settings': 'Settings'
         };
 
         // Set up navigation click events
@@ -107,26 +104,22 @@ class Router {
         return hash || null;
     }
 
-    async initializePage(page) {
+    initializePage(page) {
         console.log(`Initializing page: ${page}`);
         switch(page) {
             case 'dashboard':
-                await this.initializeDashboardPage();
-                break;
-            case 'overview':
-                this.initializeOverviewPage();
+                if (window.dashboard) {
+                    window.dashboard.refreshAllData();
+                }
                 break;
             case 'models':
                 this.initializeModelsPage();
                 break;
-            case 'model-training':
-                await this.initializeModelTrainingPage();
-                break;
             case 'predictions':
-                await this.initializePredictionsPage();
+                this.initializePredictionsPage();
                 break;
             case 'news':
-                await this.initializeNewsPage();
+                this.initializeNewsPage();
                 break;
             case 'data':
                 this.initializeDataPage();
@@ -141,74 +134,12 @@ class Router {
                 this.initializeSettingsPage();
                 break;
             case 'xai':
-                await this.initializeXAIPage();
+                this.initializeXAIPage();
                 break;
-            case 'progress':
-                console.log('[ROUTER] 🚀 Progress case triggered!');
-                await this.initializeProgressPage();
-                console.log('[ROUTER] 🚀 Progress page initialization completed!');
-                break;
-            case 'datasets':
-                await this.initializeDatasetsPage();
+            case 'training':
+                this.initializeTrainingPage();
                 break;
         }
-    }
-
-    async initializeDashboardPage() {
-        console.log('[ROUTER] Initializing dashboard page with modular approach');
-        if (!this.tabInstances.dashboard) {
-            if (window.DashboardTab) {
-                this.tabInstances.dashboard = new window.DashboardTab();
-            } else {
-                console.warn('[ROUTER] DashboardTab class not available, falling back to legacy dashboard');
-                if (window.dashboard) {
-                    window.dashboard.refreshAllData();
-                }
-                return;
-            }
-        }
-        await this.tabInstances.dashboard.init();
-    }
-
-    initializeOverviewPage() {
-        console.log('[ROUTER] Initializing system overview page');
-        
-        // System Overview는 정적 콘텐츠이므로 특별한 초기화가 필요하지 않음
-        // 모든 데이터는 HTML에 하드코딩되어 있음
-        
-        // 애니메이션 효과 추가
-        const overviewPage = document.getElementById('page-overview');
-        if (overviewPage) {
-            const widgets = overviewPage.querySelectorAll('.widget');
-            widgets.forEach((widget, index) => {
-                widget.style.opacity = '0';
-                widget.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    widget.style.transition = 'all 0.5s ease';
-                    widget.style.opacity = '1';
-                    widget.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        }
-        
-        console.log('[ROUTER] System overview page initialized with animation effects');
-    }
-
-    async initializeModelTrainingPage() {
-        console.log('[ROUTER] Initializing model training page with modular approach');
-        if (!this.tabInstances.modelTraining) {
-            if (window.ModelTrainingTab) {
-                this.tabInstances.modelTraining = new window.ModelTrainingTab();
-                // Store global reference for button functions
-                window.modelTrainingTab = this.tabInstances.modelTraining;
-            } else {
-                console.warn('[ROUTER] ModelTrainingTab class not available, falling back to legacy');
-                this.initializeModelsPage(); // Use existing legacy function as fallback
-                return;
-            }
-        }
-        await this.tabInstances.modelTraining.init();
     }
 
     initializeModelsPage() {
@@ -321,24 +252,8 @@ class Router {
         }
     }
 
-    async initializePredictionsPage() {
-        console.log('[ROUTER] Initializing predictions page with modular approach');
-        if (!this.tabInstances.predictions) {
-            if (window.PredictionsTab) {
-                this.tabInstances.predictions = new window.PredictionsTab();
-                // Store global reference for pagination functions
-                window.predictionsTab = this.tabInstances.predictions;
-            } else {
-                console.warn('[ROUTER] PredictionsTab class not available, falling back to legacy');
-                this.initializePredictionsPageLegacy();
-                return;
-            }
-        }
-        await this.tabInstances.predictions.init();
-    }
-
-    initializePredictionsPageLegacy() {
-        console.log('initializePredictionsPage called (legacy)');
+    initializePredictionsPage() {
+        console.log('initializePredictionsPage called');
         // Initialize prediction chart
         this.initializePredictionChart();
         
@@ -480,21 +395,7 @@ class Router {
     }
 
     async initializeNewsPage() {
-        console.log('[ROUTER] Initializing news page with modular approach');
-        if (!this.tabInstances.news) {
-            if (window.NewsTab) {
-                this.tabInstances.news = new window.NewsTab();
-            } else {
-                console.warn('[ROUTER] NewsTab class not available, falling back to legacy');
-                this.initializeNewsPageLegacy();
-                return;
-            }
-        }
-        await this.tabInstances.news.init();
-    }
-
-    async initializeNewsPageLegacy() {
-        console.log('initializeNewsPage called (legacy)');
+        console.log('initializeNewsPage called');
         // Use real-time news analyzer
         if (window.newsAnalyzer) {
             // Load real-time news
@@ -1016,7 +917,7 @@ class DashboardManager {
     
     // Chart setup
     setupCharts() {
-        // performance chart is now handled by dashboard-tab.js
+        this.setupPerformanceChart();
         this.setupVolumeChart();
     }
 }`,
@@ -1230,22 +1131,8 @@ class ModelTrainer:
         }
     }
 
-    async initializeXAIPage() {
-        console.log('[ROUTER] Initializing XAI page with modular approach');
-        if (!this.tabInstances.xai) {
-            if (window.XAITab) {
-                this.tabInstances.xai = new window.XAITab();
-            } else {
-                console.warn('[ROUTER] XAITab class not available, falling back to legacy');
-                this.initializeXAIPageLegacy();
-                return;
-            }
-        }
-        await this.tabInstances.xai.init();
-    }
-
-    initializeXAIPageLegacy() {
-        console.log('[XAI DEBUG] initializeXAIPage called (legacy)');
+    initializeXAIPage() {
+        console.log('[XAI DEBUG] initializeXAIPage called');
         console.log('[XAI DEBUG] window.dashboard:', window.dashboard);
         console.log('[XAI DEBUG] window.dashboard.extensions:', window.dashboard ? window.dashboard.extensions : 'dashboard not available');
         
@@ -1254,8 +1141,7 @@ class ModelTrainer:
             if (window.dashboard && window.dashboard.extensions) {
                 console.log('[XAI DEBUG] Dashboard and extensions available, calling loadXAIData');
                 // Ensure XAI data is loaded and charts are rendered
-                try {
-                    window.dashboard.extensions.loadXAIData();
+                window.dashboard.extensions.loadXAIData().then(() => {
                     console.log('[XAI DEBUG] XAI data loading completed');
                     
                     // Setup refresh button event listener
@@ -1266,11 +1152,11 @@ class ModelTrainer:
                         console.log('[XAI DEBUG] Triggering initial XAI stock analysis for NVDA');
                         window.dashboard.handleXaiStockChange('NVDA');
                     }
-                } catch (error) {
+                }).catch(error => {
                     console.error('[XAI DEBUG] Error loading XAI data:', error);
                     // Show mock data instead
                     this.showXAIFallback();
-                }
+                });
             } else {
                 console.error('[XAI DEBUG] Dashboard or extensions not available after waiting');
                 this.showXAIFallback();
@@ -1287,8 +1173,8 @@ class ModelTrainer:
                 attempts++;
                 console.log(`[XAI DEBUG] Checking dashboard availability (attempt ${attempts}/${maxAttempts})`);
                 
-                if (window.dashboard) {
-                    console.log('[XAI DEBUG] Dashboard found and ready (extensions may be null)');
+                if (window.dashboard && window.dashboard.extensions) {
+                    console.log('[XAI DEBUG] Dashboard found and ready');
                     resolve();
                 } else if (attempts >= maxAttempts) {
                     console.error('[XAI DEBUG] Dashboard not available after maximum attempts');
@@ -1374,105 +1260,173 @@ class ModelTrainer:
         });
     }
 
-    // Initialize Progress page
-    async initializeProgressPage() {
-        console.log('[ROUTER] Initializing progress page with modular approach');
-        console.log('[ROUTER] window.ProgressTab available:', !!window.ProgressTab);
-        console.log('[ROUTER] this.tabInstances.progress exists:', !!this.tabInstances.progress);
+    // Initialize Training Pipeline page
+    initializeTrainingPage() {
+        console.log('Initializing Training Pipeline page');
         
-        if (!this.tabInstances.progress) {
-            if (window.ProgressTab) {
-                console.log('[ROUTER] Creating new ProgressTab instance');
-                this.tabInstances.progress = new window.ProgressTab();
-                window.progressTab = this.tabInstances.progress; // Global reference for tab switching
-                console.log('[ROUTER] ProgressTab instance created successfully');
-            } else {
-                console.error('[ROUTER] ProgressTab class not available, falling back to legacy');
-                console.error('[ROUTER] Available window properties:', Object.keys(window).filter(key => key.includes('Tab')));
-                this.initializeProgressPageLegacy();
-                return;
-            }
-        }
+        // Render training charts
+        this.renderTrainingCharts();
         
-        try {
-            console.log('[ROUTER] Calling progress init()');
-            await this.tabInstances.progress.init();
-            console.log('[ROUTER] Progress page initialized successfully');
-        } catch (error) {
-            console.error('[ROUTER] Error initializing progress page:', error);
-            this.initializeProgressPageLegacy();
-        }
+        // Set up training controls
+        this.setupTrainingControls();
     }
 
-    initializeProgressPageLegacy() {
-        console.log('initializeProgressPage called (legacy)');
-        const container = document.getElementById('page-progress');
-        if (container) {
-            const legacyWidget = document.createElement('div');
-            legacyWidget.className = 'widget large-widget';
-            legacyWidget.style.background = '#f44336';
-            legacyWidget.style.color = 'white';
-            legacyWidget.innerHTML = `
-                <h2>⚠️ LEGACY MODE ⚠️</h2>
-                <div class="progress-placeholder">
-                    <p>ProgressTab class not loaded. Using legacy mode.</p>
-                    <p>Time: ${new Date().toLocaleTimeString()}</p>
-                </div>
-            `;
-            // Find progress-grid or append to container directly
-            const progressGrid = container.querySelector('.progress-grid');
-            if (progressGrid) {
-                progressGrid.appendChild(legacyWidget);
-            } else {
-                container.appendChild(legacyWidget);
-            }
-            console.log('[ROUTER] Added legacy mode widget');
-        }
+    renderTrainingCharts() {
+        // Feature Distribution Chart
+        this.renderFeatureDistributionChart();
+        
+        // Training Loss Chart
+        this.renderTrainingLossChart();
+        
+        // Cross-Validation Chart
+        this.renderCrossValidationChart();
     }
 
-    // Initialize Datasets page
-    async initializeDatasetsPage() {
-        console.log('[ROUTER] Initializing datasets page with modular approach');
-        console.log('[ROUTER] window.DatasetsTab available:', !!window.DatasetsTab);
-        console.log('[ROUTER] this.tabInstances.datasets exists:', !!this.tabInstances.datasets);
+    renderFeatureDistributionChart() {
+        const ctx = document.getElementById('feature-distribution-chart');
+        if (!ctx) return;
         
-        if (!this.tabInstances.datasets) {
-            if (window.DatasetsTab) {
-                console.log('[ROUTER] Creating new DatasetsTab instance');
-                this.tabInstances.datasets = new window.DatasetsTab();
-                window.datasetsTab = this.tabInstances.datasets; // Global reference for button actions
-                console.log('[ROUTER] DatasetsTab instance created successfully');
-            } else {
-                console.error('[ROUTER] DatasetsTab class not available, falling back to legacy');
-                console.error('[ROUTER] Available window properties:', Object.keys(window).filter(key => key.includes('Tab')));
-                this.initializeDatasetsPageLegacy();
-                return;
+        new Chart(ctx, {
+            type: 'histogram',
+            data: {
+                labels: ['Technical', 'Sentiment', 'Volume', 'Price', 'Macro', 'Others'],
+                datasets: [{
+                    label: 'Feature Count',
+                    data: [45, 28, 32, 24, 18, 9],
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(118, 75, 162, 0.8)',
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Feature Categories Distribution'
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
-        }
-        
-        try {
-            console.log('[ROUTER] Calling datasets init()');
-            await this.tabInstances.datasets.init();
-            console.log('[ROUTER] Datasets page initialized successfully');
-        } catch (error) {
-            console.error('[ROUTER] Error initializing datasets page:', error);
-            this.initializeDatasetsPageLegacy();
-        }
+        });
     }
 
-    initializeDatasetsPageLegacy() {
-        console.log('initializeDatasetsPage called (legacy)');
-        const container = document.getElementById('page-datasets');
-        if (container) {
-            container.innerHTML = `
-                <div class="datasets-content">
-                    <h2>Dataset Management</h2>
-                    <div class="datasets-placeholder">
-                        <p>DatasetsTab class not loaded. Please check the script inclusion.</p>
-                    </div>
-                </div>
-            `;
-        }
+    renderTrainingLossChart() {
+        const ctx = document.getElementById('training-loss-chart');
+        if (!ctx) return;
+        
+        const epochs = Array.from({length: 50}, (_, i) => i + 1);
+        const trainingLoss = epochs.map(e => 2.5 * Math.exp(-e/15) + 0.1 + Math.random() * 0.05);
+        const validationLoss = epochs.map(e => 2.3 * Math.exp(-e/12) + 0.15 + Math.random() * 0.08);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: epochs,
+                datasets: [
+                    {
+                        label: 'Training Loss',
+                        data: trainingLoss,
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: 'Validation Loss',
+                        data: validationLoss,
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Model Training Progress'
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Epochs' }},
+                    y: { title: { display: true, text: 'Loss' }}
+                }
+            }
+        });
+    }
+
+    renderCrossValidationChart() {
+        const ctx = document.getElementById('cross-validation-chart');
+        if (!ctx) return;
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4', 'Fold 5'],
+                datasets: [
+                    {
+                        label: 'Random Forest',
+                        data: [89.2, 90.1, 88.7, 89.8, 90.5],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Gradient Boosting',
+                        data: [91.5, 90.8, 92.2, 91.1, 91.9],
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgba(118, 75, 162, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'LSTM',
+                        data: [87.8, 88.5, 87.2, 88.9, 88.1],
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '5-Fold Cross-Validation Results'
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: false,
+                        min: 85,
+                        max: 95,
+                        title: { display: true, text: 'Accuracy (%)' }
+                    }
+                }
+            }
+        });
+    }
+
+    setupTrainingControls() {
+        // Training control buttons would be implemented here
+        console.log('Training controls set up');
     }
 }
 
