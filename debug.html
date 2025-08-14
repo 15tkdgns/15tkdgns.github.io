@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Dashboard Issues</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .debug-section {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .success { background: #d4edda; color: #155724; }
+      .error { background: #f8d7da; color: #721c24; }
+      .warning { background: #fff3cd; color: #856404; }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      #log {
+        height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background: #f8f9fa;
+      }
+      
+      /* Architecture Diagram Styles */
+      .architecture-container {
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 15px;
+        min-height: 400px;
+        display: none;
+      }
+      
+      .architecture-container.active {
+        display: block;
+      }
+      
+      .architecture-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      
+      .architecture-controls select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+      
+      .architecture-layer {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .architecture-layer h4 {
+        margin: 0 0 10px 0;
+        font-size: 1.2em;
+      }
+      
+      .component-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+      
+      .component-card {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        padding: 12px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .component-status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: 8px;
+      }
+      
+      .status-online { background: #28a745; color: white; }
+      .status-offline { background: #dc3545; color: white; }
+      .status-warning { background: #ffc107; color: #212529; }
+      
+      .data-flow-arrow {
+        text-align: center;
+        font-size: 1.5em;
+        color: #667eea;
+        margin: 10px 0;
+      }
+      
+      .real-time-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+      }
+      
+      .metric-card {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+      }
+      
+      .metric-value {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #667eea;
+      }
+      
+      .metric-label {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔧 Dashboard Debug Tool</h1>
+    
+    <div class="debug-section">
+      <h2>📊 Data Files Status</h2>
+      <div id="data-status">Checking...</div>
+    </div>
+
+    <div class="debug-section">
+      <h2>🌐 Network Tests</h2>
+      <button onclick="testEndpoints()">Test All Endpoints</button>
+      <button onclick="testNavigation()">Test Navigation</button>
+      <div id="network-results"></div>
+    </div>
+
+    <div class="debug-section">
+      <h2>📋 Console Log</h2>
+      <div id="log"></div>
+      <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="debug-section">
+      <h2>🏗️ System Architecture</h2>
+      <div class="architecture-controls">
+        <button onclick="toggleArchitectureView()" id="arch-toggle">Show Architecture</button>
+        <button onclick="refreshArchitecture()">Refresh</button>
+        <select id="arch-view-mode" onchange="changeArchitectureView()">
+          <option value="overview">System Overview</option>
+          <option value="data-flow">Data Flow</option>
+          <option value="component">Component Details</option>
+          <option value="real-time">Real-time Status</option>
+        </select>
+      </div>
+      <div id="architecture-diagram" class="architecture-container"></div>
+    </div>
+
+    <div class="debug-section">
+      <h2>🔗 Quick Actions</h2>
+      <button onclick="window.location.href='index.html'">Go to Main Dashboard</button>
+      <button onclick="checkChartJS()">Check Chart.js</button>
+      <button onclick="generateMockData()">Generate Mock Data</button>
+    </div>
+
+    <script>
+      // Logging utility
+      const log = (message, type = 'info') => {
+        const logDiv = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.innerHTML = `<span style="color: #666">${timestamp}</span> <span style="color: ${
+          type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff'
+        }">[${type.toUpperCase()}]</span> ${message}`;
+        logDiv.appendChild(logEntry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      };
+
+      const clearLog = () => {
+        document.getElementById('log').innerHTML = '';
+      };
+
+      // Test data file endpoints
+      const testEndpoints = async () => {
+        const endpoints = [
+          '../data/raw/system_status.json',
+          '../data/raw/realtime_results.json', 
+          '../data/raw/monitoring_dashboard.json',
+          '../data/raw/news_data.csv',
+          '../data/raw/training_features.csv'
+        ];
+
+        const resultsDiv = document.getElementById('network-results');
+        resultsDiv.innerHTML = '<h3>Testing endpoints...</h3>';
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint);
+            const status = response.ok ? 'success' : 'error';
+            const statusText = response.ok ? '✅ OK' : `❌ ${response.status}`;
+            
+            log(`${endpoint}: ${statusText}`, status);
+            
+            if (response.ok) {
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('json')) {
+                const data = await response.json();
+                log(`  └─ JSON data loaded: ${JSON.stringify(data).length} chars`, 'success');
+              } else {
+                const text = await response.text();
+                log(`  └─ Text data loaded: ${text.length} chars`, 'success');
+              }
+            }
+          } catch (error) {
+            log(`${endpoint}: ❌ ${error.message}`, 'error');
+          }
+        }
+      };
+
+      // Test navigation functionality
+      const testNavigation = () => {
+        log('Testing navigation...', 'info');
+        
+        // Check if router exists
+        if (typeof createRouter !== 'undefined') {
+          log('✅ Router module available', 'success');
+        } else {
+          log('❌ Router module not found', 'error');
+        }
+
+        // Test navigation elements
+        const navItems = document.querySelectorAll('.nav-item');
+        if (navItems.length > 0) {
+          log(`✅ Found ${navItems.length} navigation items`, 'success');
+        } else {
+          log('❌ No navigation items found', 'error');
+        }
+
+        // Test mobile menu
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        if (mobileToggle) {
+          log('✅ Mobile menu toggle found', 'success');
+        } else {
+          log('❌ Mobile menu toggle not found', 'error');
+        }
+      };
+
+      // Check Chart.js availability
+      const checkChartJS = () => {
+        if (typeof Chart !== 'undefined') {
+          log(`✅ Chart.js loaded: v${Chart.version}`, 'success');
+        } else {
+          log('❌ Chart.js not loaded', 'error');
+        }
+      };
+
+      // Generate mock data
+      const generateMockData = async () => {
+        log('Generating mock data...', 'info');
+        
+        const mockNewsData = \`title,content,sentiment,sentiment_score,timestamp,source,category
+"Market Update","Stock market shows positive trends","positive",0.8,"2025-08-12T10:00:00Z","Financial News","market"
+"Tech Stocks Rally","Technology sector leads gains","positive",0.9,"2025-08-12T10:15:00Z","Tech Today","sector"
+"Economic Forecast","Analysts predict steady growth","neutral",0.6,"2025-08-12T10:30:00Z","Economic Times","economy"
+\`;
+        
+        try {
+          const response = await fetch('../data/raw/news_data.csv', {
+            method: 'PUT',
+            body: mockNewsData,
+            headers: {
+              'Content-Type': 'text/csv'
+            }
+          });
+          
+          if (response.ok) {
+            log('✅ Mock news data generated', 'success');
+          } else {
+            log('❌ Failed to generate mock data (expected - read-only)', 'warning');
+          }
+        } catch (error) {
+          log('❌ Mock data generation failed (expected - read-only)', 'warning');
+        }
+      };
+
+      // Initialize debug checks
+      document.addEventListener('DOMContentLoaded', () => {
+        log('🔧 Debug tool initialized', 'info');
+        checkChartJS();
+        
+        // Auto-test endpoints on load
+        setTimeout(testEndpoints, 1000);
+      });
+
+      // Check data files status
+      const checkDataStatus = async () => {
+        const statusDiv = document.getElementById('data-status');
+        statusDiv.innerHTML = 'Checking data files...';
+        
+        try {
+          const systemStatus = await fetch('../data/raw/system_status.json');
+          const systemOK = systemStatus.ok;
+          
+          const realtimeResults = await fetch('../data/raw/realtime_results.json');
+          const realtimeOK = realtimeResults.ok;
+          
+          const newsData = await fetch('../data/raw/news_data.csv');
+          const newsOK = newsData.ok;
+          let newsEmpty = false;
+          
+          if (newsOK) {
+            const newsText = await newsData.text();
+            newsEmpty = newsText.trim().split('\\n').length <= 1; // Only header
+          }
+          
+          statusDiv.innerHTML = \`
+            <div>System Status: <span class="\${systemOK ? 'success' : 'error'}">\${systemOK ? '✅ OK' : '❌ Error'}</span></div>
+            <div>Realtime Results: <span class="\${realtimeOK ? 'success' : 'error'}">\${realtimeOK ? '✅ OK' : '❌ Error'}</span></div>
+            <div>News Data: <span class="\${newsOK && !newsEmpty ? 'success' : 'warning'}">\${
+              newsOK 
+                ? (newsEmpty ? '⚠️ Empty' : '✅ OK')
+                : '❌ Error'
+            }</span></div>
+          \`;
+          
+          if (newsEmpty) {
+            log('⚠️ News data file is empty - this may cause loading issues', 'warning');
+          }
+          
+        } catch (error) {
+          statusDiv.innerHTML = \`<span class="error">❌ Error checking files: \${error.message}</span>\`;
+          log(\`Error checking data status: \${error.message}\`, 'error');
+        }
+      };
+      
+      // Run data status check
+      setTimeout(checkDataStatus, 500);
+      
+      // Initialize Architecture Diagram
+      setTimeout(initArchitectureDiagram, 1000);
+      
+      // Architecture Diagram Functions
+      let architectureVisible = false;
+      let currentArchView = 'overview';
+      
+      function toggleArchitectureView() {
+        const container = document.getElementById('architecture-diagram');
+        const toggle = document.getElementById('arch-toggle');
+        
+        architectureVisible = !architectureVisible;
+        
+        if (architectureVisible) {
+          container.classList.add('active');
+          toggle.textContent = 'Hide Architecture';
+          renderArchitectureDiagram();
+        } else {
+          container.classList.remove('active');
+          toggle.textContent = 'Show Architecture';
+        }
+      }
+      
+      function changeArchitectureView() {
+        const select = document.getElementById('arch-view-mode');
+        currentArchView = select.value;
+        if (architectureVisible) {
+          renderArchitectureDiagram();
+        }
+      }
+      
+      function refreshArchitecture() {
+        if (architectureVisible) {
+          renderArchitectureDiagram();
+        }
+      }
+      
+      function initArchitectureDiagram() {
+        log('Architecture diagram initialized', 'success');
+      }
+      
+      async function renderArchitectureDiagram() {
+        const container = document.getElementById('architecture-diagram');
+        
+        try {
+          switch (currentArchView) {
+            case 'overview':
+              renderSystemOverview(container);
+              break;
+            case 'data-flow':
+              renderDataFlow(container);
+              break;
+            case 'component':
+              renderComponentDetails(container);
+              break;
+            case 'real-time':
+              await renderRealTimeStatus(container);
+              break;
+          }
+        } catch (error) {
+          container.innerHTML = `<div class="error">Error rendering architecture: ${error.message}</div>`;
+        }
+      }
+      
+      function renderSystemOverview(container) {
+        container.innerHTML = `
+          <h3>🏗️ AI Stock Prediction System - Architecture Overview</h3>
+          
+          <div class="architecture-layer" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+            <h4>🌐 Frontend Layer (JavaScript/HTML)</h4>
+            <div class="component-grid">
+              <div class="component-card">
+                <strong>Dashboard UI</strong><span class="component-status status-online">Online</span>
+                <div>Main dashboard interface with real-time charts</div>
+              </div>
+              <div class="component-card">
+                <strong>Router System</strong><span class="component-status status-online">Active</span>
+                <div>SPA navigation and page management</div>
+              </div>
+              <div class="component-card">
+                <strong>Debug Tools</strong><span class="component-status status-online">Active</span>
+                <div>Development and monitoring utilities</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="data-flow-arrow">⬇️ HTTP/WebSocket</div>
+          
+          <div class="architecture-layer" style="background: linear-gradient(135deg, #4834d4 0%, #667eea 100%);">
+            <h4>🔄 API & Data Layer</h4>
+            <div class="component-grid">
+              <div class="component-card">
+                <strong>News Analyzer</strong><span class="component-status status-online">Running</span>
+                <div>Real-time news collection and sentiment analysis</div>
+              </div>
+              <div class="component-card">
+                <strong>S&P 500 Manager</strong><span class="component-status status-online">Active</span>
+                <div>Stock data collection and processing</div>
+              </div>
+              <div class="component-card">
+                <strong>JSON Data Files</strong><span class="component-status status-online">Available</span>
+                <div>realtime_results.json, system_status.json</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="data-flow-arrow">⬇️ File System</div>
+          
+          <div class="architecture-layer" style="background: linear-gradient(135deg, #00d2d3 0%, #54a0ff 100%);">
+            <h4>🤖 ML/AI Backend (Python)</h4>
+            <div class="component-grid">
+              <div class="component-card">
+                <strong>Model Training</strong><span class="component-status status-warning">Idle</span>
+                <div>Random Forest, Gradient Boosting, LSTM, XGBoost</div>
+              </div>
+              <div class="component-card">
+                <strong>Data Pipeline</strong><span class="component-status status-online">Processing</span>
+                <div>Feature engineering and preprocessing</div>
+              </div>
+              <div class="component-card">
+                <strong>XAI Engine</strong><span class="component-status status-warning">Standby</span>
+                <div>SHAP, LIME explainability analysis</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="data-flow-arrow">⬇️ Model Output</div>
+          
+          <div class="architecture-layer" style="background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);">
+            <h4>💾 Data Storage</h4>
+            <div class="component-grid">
+              <div class="component-card">
+                <strong>Training Data</strong><span class="component-status status-online">Available</span>
+                <div>Historical S&P 500 data with features</div>
+              </div>
+              <div class="component-card">
+                <strong>Model Files</strong><span class="component-status status-online">Stored</span>
+                <div>Trained models (.pkl, .h5)</div>
+              </div>
+              <div class="component-card">
+                <strong>Results Cache</strong><span class="component-status status-online">Updated</span>
+                <div>Real-time predictions and analysis</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderDataFlow(container) {
+        container.innerHTML = `
+          <h3>🔄 Data Flow Architecture</h3>
+          
+          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="background: #007bff; color: white; padding: 15px; border-radius: 8px; display: inline-block;">
+                📈 <strong>External Data Sources</strong><br>
+                <small>yfinance API, NewsAPI, RSS Feeds</small>
+              </div>
+            </div>
+            
+            <div class="data-flow-arrow">⬇️ Raw Data Collection</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="background: #28a745; color: white; padding: 15px; border-radius: 8px; display: inline-block;">
+                🔧 <strong>Data Processing Pipeline</strong><br>
+                <small>advanced_preprocessing.py, data_collection_pipeline.py</small>
+              </div>
+            </div>
+            
+            <div class="data-flow-arrow">⬇️ Feature Engineering</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="background: #17a2b8; color: white; padding: 15px; border-radius: 8px; display: inline-block;">
+                🤖 <strong>ML Model Training</strong><br>
+                <small>Random Forest, Gradient Boosting, LSTM, XGBoost</small>
+              </div>
+            </div>
+            
+            <div class="data-flow-arrow">⬇️ Model Output</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="background: #fd7e14; color: white; padding: 15px; border-radius: 8px; display: inline-block;">
+                💾 <strong>Results Storage</strong><br>
+                <small>realtime_results.json, model_performance.json</small>
+              </div>
+            </div>
+            
+            <div class="data-flow-arrow">⬇️ Real-time Updates</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="background: #6f42c1; color: white; padding: 15px; border-radius: 8px; display: inline-block;">
+                🌐 <strong>Dashboard Frontend</strong><br>
+                <small>Real-time charts, predictions, news analysis</small>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderComponentDetails(container) {
+        container.innerHTML = `
+          <h3>🔧 Component Details</h3>
+          
+          <div class="architecture-layer">
+            <h4>📁 Frontend Components</h4>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px;">
+              <strong>Core Files:</strong><br>
+              • dashboard.js - Main dashboard functionality<br>
+              • dashboard-extended.js - Extended features and XAI<br>
+              • router.js - SPA routing system<br>
+              • debug-dashboard.js - Development tools<br><br>
+              
+              <strong>Modules (dashboard/modules/):</strong><br>
+              • ApplicationController.js - Main app controller<br>
+              • EventBus.js - Event management system<br>
+              • DataService.js - Data fetching services<br>
+              • ChartManager.js - Chart management<br>
+              • APIManager.js - API communication<br>
+            </div>
+          </div>
+          
+          <div class="architecture-layer">
+            <h4>🐍 Backend Components</h4>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px;">
+              <strong>Core Pipeline (src/core/):</strong><br>
+              • data_collection_pipeline.py - S&P500 data collection<br>
+              • advanced_preprocessing.py - Feature engineering<br>
+              • api_config.py - API configuration<br><br>
+              
+              <strong>ML Models (src/models/):</strong><br>
+              • model_training.py - Main training orchestrator<br>
+              • SP500EventDetectionModel - Core model class<br><br>
+              
+              <strong>Real-time Testing (src/testing/):</strong><br>
+              • realtime_testing_system.py - Live prediction testing<br>
+              • validation_checker.py - Data quality validation<br>
+            </div>
+          </div>
+          
+          <div class="architecture-layer">
+            <h4>📊 Data Components</h4>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px;">
+              <strong>Raw Data (data/raw/):</strong><br>
+              • Stock CSV files (stock_*.csv)<br>
+              • realtime_results.json - Live predictions<br>
+              • system_status.json - System health<br>
+              • news_data.csv - News and sentiment<br><br>
+              
+              <strong>Processed Data (data/processed/):</strong><br>
+              • llm_enhanced_features.csv - AI-enhanced features<br><br>
+              
+              <strong>Models (data/models/):</strong><br>
+              • *.pkl files - Trained scikit-learn models<br>
+              • *.h5 files - TensorFlow/Keras models<br>
+            </div>
+          </div>
+        `;
+      }
+      
+      async function renderRealTimeStatus(container) {
+        try {
+          // Fetch real-time data
+          const [systemStatus, realtimeResults, modelPerformance] = await Promise.all([
+            fetch('../data/raw/system_status.json').then(r => r.json()).catch(() => null),
+            fetch('../data/raw/realtime_results.json').then(r => r.json()).catch(() => null),
+            fetch('../data/raw/model_performance.json').then(r => r.json()).catch(() => null)
+          ]);
+          
+          const currentTime = new Date().toLocaleString();
+          
+          container.innerHTML = `
+            <h3>⚡ Real-time System Status</h3>
+            <p style="color: #6c757d; margin-bottom: 20px;">Last updated: ${currentTime}</p>
+            
+            <div class="real-time-metrics">
+              <div class="metric-card">
+                <div class="metric-value">${systemStatus?.status === 'online' ? '🟢' : '🔴'}</div>
+                <div class="metric-label">System Status</div>
+              </div>
+              
+              <div class="metric-card">
+                <div class="metric-value">${systemStatus?.performance_metrics?.accuracy_rate || 'N/A'}%</div>
+                <div class="metric-label">Accuracy Rate</div>
+              </div>
+              
+              <div class="metric-card">
+                <div class="metric-value">${systemStatus?.performance_metrics?.total_predictions || 'N/A'}</div>
+                <div class="metric-label">Total Predictions</div>
+              </div>
+              
+              <div class="metric-card">
+                <div class="metric-value">${realtimeResults?.predictions?.length || 0}</div>
+                <div class="metric-label">Active Predictions</div>
+              </div>
+              
+              <div class="metric-card">
+                <div class="metric-value">${systemStatus?.system_health?.cpu_usage || 'N/A'}%</div>
+                <div class="metric-label">CPU Usage</div>
+              </div>
+              
+              <div class="metric-card">
+                <div class="metric-value">${systemStatus?.system_health?.memory_usage || 'N/A'}%</div>
+                <div class="metric-label">Memory Usage</div>
+              </div>
+            </div>
+            
+            <div class="architecture-layer">
+              <h4>🔄 Active Services</h4>
+              <div class="component-grid">
+                <div class="component-card">
+                  <strong>Data Collector</strong>
+                  <span class="component-status ${systemStatus?.services?.data_collector?.status === 'running' ? 'status-online' : 'status-offline'}">
+                    ${systemStatus?.services?.data_collector?.status || 'Unknown'}
+                  </span>
+                  <div>Success Rate: ${systemStatus?.services?.data_collector?.success_rate || 'N/A'}%</div>
+                </div>
+                
+                <div class="component-card">
+                  <strong>Model Trainer</strong>
+                  <span class="component-status ${systemStatus?.services?.model_trainer?.status === 'running' ? 'status-online' : 'status-warning'}">
+                    ${systemStatus?.services?.model_trainer?.status || 'Unknown'}
+                  </span>
+                  <div>Success Rate: ${systemStatus?.services?.model_trainer?.success_rate || 'N/A'}%</div>
+                </div>
+                
+                <div class="component-card">
+                  <strong>Prediction Engine</strong>
+                  <span class="component-status ${systemStatus?.services?.prediction_engine?.status === 'running' ? 'status-online' : 'status-offline'}">
+                    ${systemStatus?.services?.prediction_engine?.status || 'Unknown'}
+                  </span>
+                  <div>Success Rate: ${systemStatus?.services?.prediction_engine?.success_rate || 'N/A'}%</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="architecture-layer">
+              <h4>🤖 Model Performance</h4>
+              <div class="component-grid">
+                <div class="component-card">
+                  <strong>Random Forest</strong>
+                  <div>Test Accuracy: ${modelPerformance?.random_forest?.test_accuracy ? (modelPerformance.random_forest.test_accuracy * 100).toFixed(1) + '%' : 'N/A'}</div>
+                </div>
+                
+                <div class="component-card">
+                  <strong>Gradient Boosting</strong>
+                  <div>Test Accuracy: ${modelPerformance?.gradient_boosting?.test_accuracy ? (modelPerformance.gradient_boosting.test_accuracy * 100).toFixed(1) + '%' : 'N/A'}</div>
+                </div>
+                
+                <div class="component-card">
+                  <strong>LSTM</strong>
+                  <div>Test Accuracy: ${modelPerformance?.lstm?.test_accuracy ? (modelPerformance.lstm.test_accuracy * 100).toFixed(1) + '%' : 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+        } catch (error) {
+          container.innerHTML = `<div class="error">Error loading real-time status: ${error.message}</div>`;
+        }
+      }
+    </script>
+  </body>
+</html>
