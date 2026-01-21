@@ -14,7 +14,6 @@ function App() {
           <ul className="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#research">Research</a></li>
-            <li><a href="#skills">Skills</a></li>
             <li><a href="#projects">Projects</a></li>
             <li><a href="#career">Career</a></li>
             <li><a href="#contact">Contact</a></li>
@@ -35,10 +34,7 @@ function App() {
                 KCI 등재 학술지에 제1저자로 논문을 게재한 경험이 있습니다.
               </p>
               <div className="hero-buttons">
-                <a href="#career" className="btn btn-primary">
-                  경력 보기
-                </a>
-                <a href="https://github.com/15tkdgns" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                <a href="https://github.com/15tkdgns" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                   GitHub
                 </a>
               </div>
@@ -183,74 +179,22 @@ function App() {
         </div>
       </section>
 
-      {/* Research Detail Section 2 */}
-      <section id="research-detail-2" className="section-full">
-        <div className="container">
-          <div className="section-header">
-            <h2>Research Results</h2>
-            <p>성능 평가 및 기술 스택</p>
-          </div>
-
-          <div className="detail-grid">
-            <div className="detail-card">
-              <h3>성능 평가 결과</h3>
-              <div className="performance-stats">
-                <div className="stat-item">
-                  <span className="stat-value">0.85+</span>
-                  <span className="stat-label">AUC-ROC</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-value">0.82</span>
-                  <span className="stat-label">F1-Score</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-value">0.84</span>
-                  <span className="stat-label">Precision</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-value">0.80</span>
-                  <span className="stat-label">Recall</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="detail-card">
-              <h3>활용 기술 스택</h3>
-              <div className="tech-list">
-                <span className="tech-item">Python 3.9</span>
-                <span className="tech-item">TensorFlow 2.x</span>
-                <span className="tech-item">Keras</span>
-                <span className="tech-item">Scikit-learn</span>
-                <span className="tech-item">Pandas</span>
-                <span className="tech-item">NumPy</span>
-                <span className="tech-item">Matplotlib</span>
-                <span className="tech-item">Seaborn</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Skills Section */}
-      <section id="skills" className="section-full">
-        <div className="container">
-          <div className="section-header">
-            <h2>Technical Skills</h2>
-            <p>연구 및 개발에 활용하는 기술 스택</p>
-          </div>
-
-          <div className="skills-image-container">
-            <img src="/skills.png" alt="Technical Skills" className="skills-image" />
-          </div>
-        </div>
-      </section>
-
       {/* Projects Section 1 - Caffeine */}
       <section id="projects" className="section-full">
         <div className="container">
           <div className="section-header">
             <h2>Projects</h2>
             <p>주요 프로젝트</p>
+          </div>
+
+          <div className="projects-overview">
+            <p>
+              <strong>Caffeine</strong> - AI 기반 가계부 앱 |
+              <strong> VRP 예측</strong> - 금융 분석 |
+              <strong> Food-101</strong> - CNN 분류 |
+              <strong> 전세사기 예방</strong> - OCR 분석 |
+              <strong> 변동성 예측</strong> - VIX-RV
+            </p>
           </div>
 
           <div className="projects-list">
@@ -412,6 +356,11 @@ function App() {
                 <source src="/videos/UserApp_.mp4" type="video/mp4" />
                 브라우저가 영상을 지원하지 않습니다.
               </video>
+              <div className="demo-video-links">
+                <a href="/videos/UserApp_.mp4" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                  영상 링크
+                </a>
+              </div>
             </div>
             <div className="demo-video-card">
               <h3>관리자 앱 데모</h3>
@@ -420,6 +369,11 @@ function App() {
                 <source src="/videos/관리자 더빙영상 (1).mp4" type="video/mp4" />
                 브라우저가 영상을 지원하지 않습니다.
               </video>
+              <div className="demo-video-links">
+                <a href="/videos/관리자 더빙영상 (1).mp4" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                  영상 링크
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -514,6 +468,78 @@ function App() {
         </div>
       </section>
 
+      {/* Projects Section 3 - Contract App */}
+      <section id="projects3" className="section-full">
+        <div className="container">
+          <div className="section-header">
+            <h2>Projects</h2>
+            <p>추가 프로젝트</p>
+          </div>
+
+          <div className="projects-grid-two">
+            {/* Contract App - 전세사기 예방 */}
+            <div className="project-card-horizontal">
+              <div className="project-info">
+                <div className="project-badge">Web App</div>
+                <h3>전세사기 예방 웹앱</h3>
+                <p className="project-description">
+                  계약서와 등기부등본을 업로드하면 전세사기 위험을 분석해주는 웹 애플리케이션입니다.
+                  OCR 기반 문서 분석으로 8가지 사기 유형을 자동 체크합니다.
+                </p>
+                <div className="project-detail-list">
+                  <div className="project-detail-item">
+                    <strong>핵심 기능:</strong> OCR 문서 추출, 위험도 점수, PDF 보고서
+                  </div>
+                  <div className="project-detail-item">
+                    <strong>분석 항목:</strong> 전세가율, 소유자 일치, 근저당 분석
+                  </div>
+                </div>
+                <div className="project-tech">
+                  <span className="tech-tag">React</span>
+                  <span className="tech-tag">Vite</span>
+                  <span className="tech-tag">Tesseract.js</span>
+                </div>
+                <div className="project-links">
+                  <a href="https://github.com/15tkdgns/contract_app" target="_blank" rel="noopener noreferrer" className="project-link">
+                    GitHub
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Stock Prediction */}
+            <div className="project-card-horizontal">
+              <div className="project-info">
+                <div className="project-badge">Research</div>
+                <h3>금융 변동성 예측 시스템</h3>
+                <p className="project-description">
+                  VIX-RV Basis를 활용한 자산 간 변동성 예측 연구 프로젝트입니다.
+                  SCI 저널 제출 준비 중인 학술적 연구입니다.
+                </p>
+                <div className="project-detail-list">
+                  <div className="project-detail-item">
+                    <strong>방법론:</strong> Purged K-Fold 검증, 데이터 무결성 보장
+                  </div>
+                  <div className="project-detail-item">
+                    <strong>성과:</strong> 경제적 가치 실증, 단기 변동성 예측
+                  </div>
+                </div>
+                <div className="project-tech">
+                  <span className="tech-tag">Python</span>
+                  <span className="tech-tag">Streamlit</span>
+                  <span className="tech-tag">Statistical Modeling</span>
+                </div>
+                <div className="project-links">
+                  <a href="https://github.com/15tkdgns/ai-stock-prediction" target="_blank" rel="noopener noreferrer" className="project-link">
+                    GitHub
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Career & Certifications Section */}
       <section id="career" className="section-full">
         <div className="container">
@@ -527,7 +553,7 @@ function App() {
             <div className="career-card">
               <h3>경력</h3>
               <div className="career-item">
-                <div className="career-period">2023.01 - 2025.03</div>
+                <div className="career-period">2023.01 - 2025.05</div>
                 <div className="career-title">IT 인프라 구축/운영 회사</div>
                 <ul className="career-details">
                   <li>서버, 스토리지, 백업 담당</li>
