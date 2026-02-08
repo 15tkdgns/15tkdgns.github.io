@@ -189,11 +189,10 @@ function App() {
 
           <div className="projects-overview">
             <p>
-              <strong>Caffeine</strong> - AI 기반 가계부 앱 |
-              <strong> VRP 예측</strong> - 금융 분석 |
-              <strong> Food-101</strong> - CNN 분류 |
-              <strong> 전세사기 예방</strong> - OCR 분석 |
-              <strong> 변동성 예측</strong> - VIX-RV
+              <strong>Caffeine</strong> - 가계부 AI |
+              <strong> CAVB</strong> - 변동성 AI |
+              <strong> Food-101</strong> - 음식 AI |
+              <strong> Constract</strong> - 계약 AI
             </p>
           </div>
 
@@ -388,38 +387,38 @@ function App() {
           </div>
 
           <div className="projects-grid-two">
-            {/* VRP Prediction */}
+            {/* CAVB Prediction */}
             <div className="project-card-horizontal">
               <div className="project-info">
                 <div className="project-badge">Research</div>
-                <h3>VRP 예측 연구 - VIX-Beta 이론</h3>
+                <h3>CAVB (VIX-RV Basis) 예측 연구</h3>
                 <p className="project-description">
-                  Variance Risk Premium(VRP) 예측 연구 프로젝트입니다.
-                  VIX-Beta 이론을 기반으로 옵션 시장의 위험 프리미엄을 예측합니다.
+                  VIX(Systemic Risk)와 RV(Idiosyncratic Volatility)의 괴리(Basis)를 활용한 자산 간 변동성 예측 시스템입니다.
+                  기존 VIX-Beta 이론을 고도화하여 SCI 저널 제출 수준의 성과를 도출했습니다.
                 </p>
                 <div className="project-detail-list">
                   <div className="project-detail-item">
-                    <strong>연구 목표:</strong> VIX와 실현 변동성 간의 Gap을 예측하여 투자 전략 수립
+                    <strong>연구 성과:</strong> 평균 R² 0.746 (모든 자산 클래스 예측 가능)
                   </div>
                   <div className="project-detail-item">
-                    <strong>핵심 발견:</strong> 22-day Gap이 VRP 예측에 가장 효과적 (R^2=0.44)
+                    <strong>핵심 발견:</strong> 5-day 예측이 22-day 대비 평균 +717% 우수한 성능 실증
                   </div>
                   <div className="project-detail-item">
-                    <strong>모델:</strong> MLP, Ridge Regression, Random Forest 비교 분석
+                    <strong>변동성 Basis:</strong> VIX와 RV 간의 괴리가 예측 가능한 패턴(CAVB) 형성 확인
                   </div>
                   <div className="project-detail-item">
-                    <strong>데이터:</strong> S&P 500, VIX, 개별 자산 베타 (2010-2024)
+                    <strong>모델:</strong> ElasticNet 기반의 단순 알고리즘으로 높은 일반화 성능 확보
                   </div>
                 </div>
                 <div className="project-tech">
                   <span className="tech-tag">Python</span>
-                  <span className="tech-tag">Financial Analysis</span>
-                  <span className="tech-tag">Statistical Modeling</span>
-                  <span className="tech-tag">MLP</span>
+                  <span className="tech-tag">Conda (Virtual Env)</span>
+                  <span className="tech-tag">ElasticNet</span>
+                  <span className="tech-tag">HAR-RV Benchmark</span>
                   <span className="tech-tag">Streamlit</span>
                 </div>
                 <div className="project-links">
-                  <a href="https://github.com/15tkdgns/vrp-prediction" target="_blank" rel="noopener noreferrer" className="project-link">
+                  <a href="https://github.com/15tkdgns/CAVB" target="_blank" rel="noopener noreferrer" className="project-link">
                     GitHub
                   </a>
                 </div>
@@ -477,30 +476,34 @@ function App() {
           </div>
 
           <div className="projects-grid-two">
-            {/* Contract App - 전세사기 예방 */}
+            {/* Constract - 계약서 시각화 AI */}
             <div className="project-card-horizontal">
               <div className="project-info">
-                <div className="project-badge">Web App</div>
-                <h3>전세사기 예방 웹앱</h3>
+                <div className="project-badge">Web App / AI</div>
+                <h3>Constract - 계약서 시각화 및 사기 탐지 AI</h3>
                 <p className="project-description">
-                  계약서와 등기부등본을 업로드하면 전세사기 위험을 분석해주는 웹 애플리케이션입니다.
-                  OCR 기반 문서 분석으로 8가지 사기 유형을 자동 체크합니다.
+                  임대차 계약서와 등기부등본의 관계를 리스크 노드로 시각화하고,
+                  AI 기반 OCR 대조를 통해 전세사기 위험 요소를 자동으로 분석합니다.
                 </p>
                 <div className="project-detail-list">
                   <div className="project-detail-item">
-                    <strong>핵심 기능:</strong> OCR 문서 추출, 위험도 점수, PDF 보고서
+                    <strong>시각화 설계:</strong> 계약 정보와 권리 관계를 직관적인 UI 노드로 구조화
                   </div>
                   <div className="project-detail-item">
-                    <strong>분석 항목:</strong> 전세가율, 소유자 일치, 근저당 분석
+                    <strong>핵심 로직:</strong> OCR로 추출된 텍스트 기반 8대 사기 유형 실시간 체크
+                  </div>
+                  <div className="project-detail-item">
+                    <strong>안전성:</strong> 클라이언트 사이드 Tesseract.js 활용으로 데이터 유출 방지
                   </div>
                 </div>
                 <div className="project-tech">
                   <span className="tech-tag">React</span>
                   <span className="tech-tag">Vite</span>
                   <span className="tech-tag">Tesseract.js</span>
+                  <span className="tech-tag">Data Visualization</span>
                 </div>
                 <div className="project-links">
-                  <a href="https://github.com/15tkdgns/contract_app" target="_blank" rel="noopener noreferrer" className="project-link">
+                  <a href="https://github.com/15tkdgns/constract" target="_blank" rel="noopener noreferrer" className="project-link">
                     GitHub
                   </a>
                 </div>
